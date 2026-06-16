@@ -70,7 +70,7 @@ public static class MapManager
             if (data.Territory.ValueNullable == null) continue;
             if (data.PlaceName.ValueNullable == null) continue;
             if (data.Territory.Value.RowId != territoryType) continue;
-            var n = data.PlaceName.ValueNullable?.Name.ToString() ?? "";
+            var n = data.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
             if (n.EqualsIgnoreCase(name))
             {
                 return (data.RowId, n);
@@ -86,10 +86,10 @@ public static class MapManager
         {
             if (!data.IsAetheryte) continue;
             if (data.PlaceName.ValueNullable == null) continue;
-            var n = data.PlaceName.ValueNullable?.Name.ToString() ?? "";
+            var n = data.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
             if (n.EqualsIgnoreCase(name))
             {
-                var zoneName = data.Territory.ValueNullable?.PlaceName.ValueNullable?.Name.ToString() ?? "";
+                var zoneName = data.Territory.ValueNullable?.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
                 return (data.RowId, n, zoneName);
             }
         }
