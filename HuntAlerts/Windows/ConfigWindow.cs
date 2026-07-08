@@ -590,9 +590,7 @@ public class ConfigWindow : Window, IDisposable
             ImGui.TextUnformatted($"  ·  {FormatAgo(ago)} ago");
             ImGui.PopStyleColor();
         }
-
-        ImGui.Spacing();
-        Components.FieldRow("Server", socket.ServerUri);
+        
 
         if (!string.IsNullOrEmpty(socket.LastConnectionError))
         {

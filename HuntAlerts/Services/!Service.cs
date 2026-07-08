@@ -17,6 +17,7 @@ public static class Service
     public static WorldArrowWindow WorldArrowWindow { get; internal set; } = null!;
     public static ToastWindow ToastWindow { get; internal set; } = null!;
     public static WhatsNewWindow WhatsNewWindow { get; internal set; } = null!;
+    public static AlertingNoticeWindow AlertingNoticeWindow { get; internal set; } = null!;
 
     public static void OpenConfig() => ConfigWindow.IsOpen = true;
 }

@@ -81,6 +81,7 @@ namespace HuntAlerts
         public float ToastPosX { get; set; }
         public float ToastPosY { get; set; }
         public int LastSeenChangelogVersion { get; set; } = 0;
+        public int AlertingNoticeVersion { get; set; } = 0;
 
         [NonSerialized]
         private IDalamudPluginInterface? PluginInterface;

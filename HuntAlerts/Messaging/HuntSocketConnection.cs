@@ -23,9 +23,11 @@ namespace HuntAlerts.Messaging;
 
 public sealed class HuntSocketConnection : IDisposable
 {
-    public const string DefaultServerUri = "wss://huntalerts.pro:24842";
+    public const string DefaultServerUri = "wss://huntalerts.pro:24845";
 
-    public enum ConnectionState { Unknown, Connecting, Connected, Disconnected, Reconnecting, Error }
+    public static readonly bool ConnectionEnabled = true;
+
+    public enum ConnectionState { Unknown, Connecting, Connected, Disconnected, Reconnecting, Error, Disabled }
 
     private SocketIOClient.SocketIO? socket;
     private CancellationTokenSource? cancellationTokenSource;
@@ -63,6 +65,14 @@ public sealed class HuntSocketConnection : IDisposable
 
     private void Connect()
     {
+        if (!ConnectionEnabled)
+        {
+            SetSocketState(ConnectionState.Disabled);
+            LogConnection("INFO", "Server connection disabled in this build.");
+            PluginLog.Information("HuntAlerts: server connection disabled (ConnectionEnabled = false).");
+            return;
+        }
+
         cancellationTokenSource = new CancellationTokenSource();
         socket = new SocketIOClient.SocketIO(ServerUri, new SocketIOOptions
         {
@@ -108,7 +118,7 @@ public sealed class HuntSocketConnection : IDisposable
         });
 
         SetSocketState(ConnectionState.Connecting);
-        LogConnection("INFO", $"Connecting to {ServerUri}...");
+        LogConnection("INFO", $"Connecting...");
         socket.ConnectAsync().ContinueWith(task =>
         {
             if (task.IsFaulted)
@@ -124,6 +134,13 @@ public sealed class HuntSocketConnection : IDisposable
 
     public async Task ReconnectAsync()
     {
+        if (!ConnectionEnabled)
+        {
+            SetSocketState(ConnectionState.Disabled);
+            LogConnection("INFO", "Reconnect ignored; server connection disabled in this build.");
+            return;
+        }
+
         LogConnection("INFO", "Manual reconnect requested.");
         SetSocketState(ConnectionState.Connecting);
         try

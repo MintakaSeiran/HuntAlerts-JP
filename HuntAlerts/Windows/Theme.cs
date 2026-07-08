@@ -16,6 +16,11 @@ internal static class Theme
     public static readonly uint TrainBorder = 0xFFC08040;
     public static readonly uint TrainText   = 0xFFFFC68A;
 
+    public static readonly uint NoticeBg     = 0xFF5C1E1E;
+    public static readonly uint NoticeBorder = 0xFFC04040;
+    public static readonly uint NoticeText   = 0xFFFF8A8A;
+    public static readonly uint NoticeGoodText = 0xFF90D890;   // positive/back-online notice
+
     public static readonly uint KindBg      = 0xFF2A2A2A;
     public static readonly uint KindBorder  = 0xFF4A4A4A;
     public static readonly uint KindText    = 0xFFB8B8B8;
