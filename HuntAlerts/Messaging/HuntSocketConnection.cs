@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Dalamud.Game;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ECommons;
@@ -586,7 +587,7 @@ public sealed class HuntSocketConnection : IDisposable
                 startTerritoryTypeId,
                 instance,
                 mapLocationCoords,
-                Svc.Data.GetExcelSheet<BNpcName>().FirstOrNull(r => r.Singular.ExtractText().Equals(creatureName.Trim(), StringComparison.OrdinalIgnoreCase))?.RowId);
+                Svc.Data.GetExcelSheet<BNpcName>(ClientLanguage.English).FirstOrNull(r => r.Singular.ExtractText().Equals(creatureName.Trim(), StringComparison.OrdinalIgnoreCase))?.RowId);
 
             var link = Service.MessageCacheManager.AddMessage(htMessage);
             Service.IPCManager.OnHuntTrainMessageReceived(htMessage);
