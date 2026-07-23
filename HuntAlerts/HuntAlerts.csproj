@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Dalamud.NET.SDK/15.0.0">
     <PropertyGroup>
-        <Version>1.4.1.1</Version>
+        <Version>1.4.1.2</Version>
         <Description>HuntAlerts</Description>
         <PackageProjectUrl>https://github.com/goatcorp/HuntAlerts</PackageProjectUrl>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
@@ -34,6 +34,7 @@
     <ItemGroup>
       <PackageReference Include="ECommons.IPC" Version="1.0.0.19" />
       <PackageReference Include="SocketIOClient" Version="3.1.1" />
+      <PackageReference Include="NAudio" Version="2.2.1" />
     </ItemGroup>
 
     <ItemGroup>

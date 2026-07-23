@@ -74,6 +74,7 @@ namespace HuntAlerts
         public void Dispose()
         {
             ChatWaypointListener.Disable();
+            Helpers.Sounds.DisposeAll();
             WindowSystem.RemoveAllWindows();
             Service.ConfigWindow.Dispose();
 

@@ -417,7 +417,9 @@ public sealed class HuntSocketConnection : IDisposable
         if (config.ChatAlertsEnabled)
             PrintChat(BuildLinkedLine(link, $"{hm.Kind} train starting on {hm.World}! (Click for info)", config.TextColor));
 
-        if (config.SoundEffect != 0)
+        if (config.UseCustomTrainSound && Sounds.Train.Exists)
+            Sounds.Train.Play(config.CustomTrainSoundVolume);
+        else if (config.SoundEffect != 0)
             UIGlobals.PlayChatSoundEffect((uint)config.SoundEffect);
     }
 
@@ -601,8 +603,10 @@ public sealed class HuntSocketConnection : IDisposable
             if (config.ChatAlertsEnabled)
                 PrintChat(BuildLinkedLine(link, label, config.SRankTextColor));
 
-            if (config.SoundEffect != 0)
-                UIGlobals.PlayChatSoundEffect((uint)config.SoundEffect);
+            if (config.UseCustomSRankSound && Sounds.SRank.Exists)
+                Sounds.SRank.Play(config.CustomSRankSoundVolume);
+            else if (config.SRankSoundEffect != 0)
+                UIGlobals.PlayChatSoundEffect((uint)config.SRankSoundEffect);
         }
         else
         {

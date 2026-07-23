@@ -39,7 +39,7 @@ namespace HuntAlerts
     [Serializable]
     public class Configuration : IPluginConfiguration
     {
-        public int Version { get; set; } = 3;
+        public int Version { get; set; } = 4;
 
         public bool SuppressDuplicates { get; set; } = true;
         public bool ChatAlertsEnabled { get; set; } = true;
@@ -50,6 +50,12 @@ namespace HuntAlerts
         public XivChatType OutputChat { get; set; } = (XivChatType)56;
         public bool OpenMapOnArrival { get; set; } = true;
         public int SoundEffect { get; set; } = 0;
+        public bool UseCustomTrainSound { get; set; } = false;
+        public float CustomTrainSoundVolume { get; set; } = 0.7f;
+
+        public int SRankSoundEffect { get; set; } = 0;
+        public bool UseCustomSRankSound { get; set; } = false;
+        public float CustomSRankSoundVolume { get; set; } = 0.7f;
 
         public bool LifestreamIntegration { get; set; } = false;
         public bool ctrlclickTeleport { get; set; } = false;
