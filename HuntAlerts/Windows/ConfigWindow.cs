@@ -240,6 +240,19 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Flag Map automatically on arrival", ref flag))
         { HuntAlerts.C.OpenMapOnArrival = flag; HuntAlerts.C.Save(); }
 
+        var hideInDuty = HuntAlerts.C.HideAlertsInDuty;
+        if (ImGui.Checkbox("Hide alerts while in a duty", ref hideInDuty))
+        { HuntAlerts.C.HideAlertsInDuty = hideInDuty; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("While in instanced content (dungeon, raid, trial, etc), skip the popup, chat line and sound.\nHunts are still recorded and appear in Recent Hunts afterwards.");
+        if (hideInDuty && Svc.Condition.InDuty())
+        {
+            ImGui.SameLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, Theme.Accent);
+            ImGui.TextUnformatted("(in duty now)");
+            ImGui.PopStyleColor();
+        }
+
         ImGui.Spacing();
         Components.SectionHeader("Chat");
 

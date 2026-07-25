@@ -412,6 +412,13 @@ public sealed class HuntSocketConnection : IDisposable
         var link = Service.MessageCacheManager.AddMessage(htMessage);
         Service.IPCManager.OnHuntTrainMessageReceived(htMessage);
         Service.IPCManager.OnHuntAlertMessageReceived(typedAlert);
+
+        if (Utilities.HideAlertsNow)
+        {
+            PluginLog.Verbose("Train alert hidden: in duty.");
+            return;
+        }
+
         Service.ToastWindow.Show(htMessage);
 
         if (config.ChatAlertsEnabled)
@@ -594,6 +601,15 @@ public sealed class HuntSocketConnection : IDisposable
             var link = Service.MessageCacheManager.AddMessage(htMessage);
             Service.IPCManager.OnHuntTrainMessageReceived(htMessage);
             Service.IPCManager.OnHuntAlertMessageReceived(typedAlert);
+
+            // Recorded to history + IPC above; withhold the intrusive alert while
+            // in instanced content (still visible in Recent Hunts afterwards).
+            if (Utilities.HideAlertsNow)
+            {
+                PluginLog.Verbose("S Rank alert hidden: in duty.");
+                return;
+            }
+
             Service.ToastWindow.Show(htMessage);
 
             var label = instance > 1
@@ -613,6 +629,11 @@ public sealed class HuntSocketConnection : IDisposable
             if (!config.SRankKillNotifications || !config.ChatAlertsEnabled)
             {
                 PluginLog.Verbose("S Rank kill notification suppressed by setting.");
+                return;
+            }
+            if (Utilities.HideAlertsNow)
+            {
+                PluginLog.Verbose("S Rank kill notification hidden: in duty.");
                 return;
             }
             var label = $"{hm.Kind} S Rank {creatureName} on {hm.World} was killed at {HuntMessageFormatting.ConvertTime(deathTime)}.";

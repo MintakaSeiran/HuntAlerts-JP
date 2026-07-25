@@ -13,6 +13,8 @@ internal sealed class PersistedCache
     public int Version { get; set; } = CurrentVersion;
     public int Capacity { get; set; }
     public int CommandCount { get; set; }
+
+    public int ClearedAtCount { get; set; }
     public HuntTrainMessage?[] Slots { get; set; } = Array.Empty<HuntTrainMessage?>();
 }
 
@@ -46,12 +48,12 @@ internal static class HistoryStore
         }
     }
 
-    public static void Save(int capacity, int commandCount, HuntTrainMessage?[] slots)
+    public static void Save(int capacity, int commandCount, int clearedAtCount, HuntTrainMessage?[] slots)
     {
         try
         {
             Svc.PluginInterface.ConfigDirectory.Create();
-            var doc  = new PersistedCache { Capacity = capacity, CommandCount = commandCount, Slots = slots };
+            var doc  = new PersistedCache { Capacity = capacity, CommandCount = commandCount, ClearedAtCount = clearedAtCount, Slots = slots };
             var json = JsonConvert.SerializeObject(doc, Formatting.None);
             File.WriteAllText(FilePath, json);
         }

@@ -23,6 +23,9 @@ public class MessageCacheManager : IDisposable
     private readonly HuntTrainMessage?[]  Messages    = new HuntTrainMessage?[Capacity];
     private int CommandCount = 0;
 
+    // "History cleared" watermark: entries with a sequence number below this are hidden from the history list but stay in Messages, so previously posted chat links keep resolving.
+    private int ClearedAtCount = 0;
+
     public MessageCacheManager()
     {
         for (var i = 0u; i < Capacity; i++)
@@ -45,12 +48,24 @@ public class MessageCacheManager : IDisposable
         }
 
         CommandCount = saved.Capacity == Capacity ? saved.CommandCount : copy;
-        PluginLog.Verbose($"HistoryStore: restored {Messages.Count(m => m != null)} events; CommandCount={CommandCount}.");
+        // Only meaningful against the same ring size; otherwise sequence numbers
+        // don't line up, so fall back to "nothing hidden".
+        ClearedAtCount = saved.Capacity == Capacity ? Math.Clamp(saved.ClearedAtCount, 0, CommandCount) : 0;
+        PluginLog.Verbose($"HistoryStore: restored {Messages.Count(m => m != null)} events; CommandCount={CommandCount}; ClearedAtCount={ClearedAtCount}.");
     }
 
     private void SaveToDisk()
     {
-        HistoryStore.Save(Capacity, CommandCount, Messages);
+        HistoryStore.Save(Capacity, CommandCount, ClearedAtCount, Messages);
+    }
+
+    /// Hide everything currently in the list. The cached entries (and therefore
+    /// every chat link already posted) are deliberately left intact.
+    public void ClearHistory()
+    {
+        ClearedAtCount = CommandCount;
+        SaveToDisk();
+        PluginLog.Verbose($"HistoryStore: history list cleared at CommandCount={CommandCount} (links preserved).");
     }
 
     public DalamudLinkPayload AddMessage(HuntTrainMessage message)
@@ -96,7 +111,9 @@ public class MessageCacheManager : IDisposable
 
         for (var i = 1; i <= stored; i++)
         {
-            var idx = (CommandCount - i) % Capacity;
+            var seq = CommandCount - i;        // this entry's global sequence number
+            if (seq < ClearedAtCount) continue;  // hidden by a history clear (link still resolves)
+            var idx = seq % Capacity;
             if (idx < 0) idx += Capacity;
             var msg = Messages[idx];
             if (msg != null) ordered.Add(msg);

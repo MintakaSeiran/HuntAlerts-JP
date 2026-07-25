@@ -57,6 +57,7 @@ namespace HuntAlerts
         public bool UseCustomSRankSound { get; set; } = false;
         public float CustomSRankSoundVolume { get; set; } = 0.7f;
 
+        public bool HideAlertsInDuty { get; set; } = false;
         public bool LifestreamIntegration { get; set; } = false;
         public bool ctrlclickTeleport { get; set; } = false;
 

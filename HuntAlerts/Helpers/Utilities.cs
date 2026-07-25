@@ -11,11 +11,18 @@ using Lumina.Excel.Sheets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Plugin.Services;
 
 namespace HuntAlerts.Helpers
 {
     public static class Utilities
     {
+
+        public static bool InDuty(this ICondition condition) => condition.Any(ConditionFlag.BoundByDuty, ConditionFlag.BoundByDuty56, ConditionFlag.BoundByDuty95);
+
+        public static bool HideAlertsNow => HuntAlerts.C.HideAlertsInDuty && Svc.Condition.InDuty();
+
         public static unsafe void OpenPartyFinder()
         {
             try
