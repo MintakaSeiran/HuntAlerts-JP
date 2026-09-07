@@ -253,6 +253,19 @@ public class ConfigWindow : Window, IDisposable
             ImGui.PopStyleColor();
         }
 
+        var muteInCutscene = HuntAlerts.C.MuteAlertSoundInCutscene;
+        if (ImGui.Checkbox("Mute alert sounds during cutscenes", ref muteInCutscene))
+        { HuntAlerts.C.MuteAlertSoundInCutscene = muteInCutscene; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("While watching a cutscene, skip only the alert sound.\nThe popup and chat line still appear as normal.");
+        if (muteInCutscene && Svc.Condition.InCutscene())
+        {
+            ImGui.SameLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, Theme.Accent);
+            ImGui.TextUnformatted("(in cutscene now)");
+            ImGui.PopStyleColor();
+        }
+
         ImGui.Spacing();
         Components.SectionHeader("Chat");
 
@@ -302,6 +315,12 @@ public class ConfigWindow : Window, IDisposable
         var relayIdx   = RelayChannels.IndexOfCommand(HuntAlerts.C.DefaultRelayChannel);
         if (ImGui.Combo("Default Relay Channel", ref relayIdx, relayNames, relayNames.Length))
         { HuntAlerts.C.DefaultRelayChannel = RelayChannels.All[relayIdx].Command; HuntAlerts.C.Save(); }
+
+        var relayFlag = HuntAlerts.C.RelayFlagLink;
+        if (ImGui.Checkbox("Add clickable map flag when relaying", ref relayFlag))
+        { HuntAlerts.C.RelayFlagLink = relayFlag; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Appends a <flag> map link so anyone in the channel can click the coordinates,\neven without this plugin. Sets your map flag to the hunt location, which opens the map.");
 
         var snoozeOpts  = new (string Name, int Value)[] { ("5 min", 5), ("15 min", 15), ("30 min", 30), ("60 min", 60), ("2 hours", 120) };
         var snoozeNames = snoozeOpts.Select(o => o.Name).ToArray();

@@ -2,6 +2,7 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ECommons;
 using ECommons.DalamudServices;
 using ECommons.Logging;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.Sheets;
 using System;
 
@@ -13,6 +14,20 @@ public static class MapManager
         var map = Svc.Data.GetExcelSheet<TerritoryType>().GetRow(territoryType).Map.RowId;
         var linkPayload = new MapLinkPayload(territoryType, map, x, y);
         Svc.GameGui.OpenMapWithMapLink(linkPayload);
+    }
+
+    public static unsafe void CloseMap()
+    {
+        try
+        {
+            var agent = AgentMap.Instance();
+            if (agent != null && agent->IsAgentActive())
+                agent->Hide();
+        }
+        catch (Exception e)
+        {
+            PluginLog.Warning($"HuntAlerts: could not close map: {e.Message}");
+        }
     }
 
     public static (uint RowId, string Name) GetNearestAetheryte(uint territoryType, float x, float y)

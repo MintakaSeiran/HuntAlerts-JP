@@ -58,6 +58,7 @@ namespace HuntAlerts
         public float CustomSRankSoundVolume { get; set; } = 0.7f;
 
         public bool HideAlertsInDuty { get; set; } = false;
+        public bool MuteAlertSoundInCutscene { get; set; } = false;
         public bool LifestreamIntegration { get; set; } = false;
         public bool ctrlclickTeleport { get; set; } = false;
 
@@ -76,6 +77,7 @@ namespace HuntAlerts
 
         public int SnoozeDefaultMinutes { get; set; } = 30;
         public string DefaultRelayChannel { get; set; } = "/p";
+        public bool RelayFlagLink { get; set; } = true;
         public bool WorldArrowEnabled { get; set; } = true;
         public bool ArrowChatPickup { get; set; } = true;
         public bool ArrowChatPickupShout { get; set; } = true;

@@ -21,7 +21,12 @@ namespace HuntAlerts.Helpers
 
         public static bool InDuty(this ICondition condition) => condition.Any(ConditionFlag.BoundByDuty, ConditionFlag.BoundByDuty56, ConditionFlag.BoundByDuty95);
 
+        public static bool InCutscene(this ICondition condition) => condition.Any(ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78);
+
         public static bool HideAlertsNow => HuntAlerts.C.HideAlertsInDuty && Svc.Condition.InDuty();
+
+        // Sound-only gate: the popup and chat line still show; just the audio is muted.
+        public static bool MuteAlertSoundNow => HuntAlerts.C.MuteAlertSoundInCutscene && Svc.Condition.InCutscene();
 
         public static unsafe void OpenPartyFinder()
         {

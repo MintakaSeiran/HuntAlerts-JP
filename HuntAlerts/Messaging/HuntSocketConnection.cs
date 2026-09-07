@@ -424,10 +424,13 @@ public sealed class HuntSocketConnection : IDisposable
         if (config.ChatAlertsEnabled)
             PrintChat(BuildLinkedLine(link, $"{hm.Kind} train starting on {hm.World}! (Click for info)", config.TextColor));
 
-        if (config.UseCustomTrainSound && Sounds.Train.Exists)
-            Sounds.Train.Play(config.CustomTrainSoundVolume);
-        else if (config.SoundEffect != 0)
-            UIGlobals.PlayChatSoundEffect((uint)config.SoundEffect);
+        if (!Utilities.MuteAlertSoundNow)
+        {
+            if (config.UseCustomTrainSound && Sounds.Train.Exists)
+                Sounds.Train.Play(config.CustomTrainSoundVolume);
+            else if (config.SoundEffect != 0)
+                UIGlobals.PlayChatSoundEffect((uint)config.SoundEffect);
+        }
     }
 
     private void HandleSRankEvent(HuntMessage hm)
@@ -619,10 +622,13 @@ public sealed class HuntSocketConnection : IDisposable
             if (config.ChatAlertsEnabled)
                 PrintChat(BuildLinkedLine(link, label, config.SRankTextColor));
 
-            if (config.UseCustomSRankSound && Sounds.SRank.Exists)
-                Sounds.SRank.Play(config.CustomSRankSoundVolume);
-            else if (config.SRankSoundEffect != 0)
-                UIGlobals.PlayChatSoundEffect((uint)config.SRankSoundEffect);
+            if (!Utilities.MuteAlertSoundNow)
+            {
+                if (config.UseCustomSRankSound && Sounds.SRank.Exists)
+                    Sounds.SRank.Play(config.CustomSRankSoundVolume);
+                else if (config.SRankSoundEffect != 0)
+                    UIGlobals.PlayChatSoundEffect((uint)config.SRankSoundEffect);
+            }
         }
         else
         {
