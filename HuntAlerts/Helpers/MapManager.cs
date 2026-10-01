@@ -2,6 +2,7 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ECommons;
 using ECommons.DalamudServices;
 using ECommons.Logging;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.Sheets;
 using System;
 
@@ -13,6 +14,20 @@ public static class MapManager
         var map = Svc.Data.GetExcelSheet<TerritoryType>().GetRow(territoryType).Map.RowId;
         var linkPayload = new MapLinkPayload(territoryType, map, x, y);
         Svc.GameGui.OpenMapWithMapLink(linkPayload);
+    }
+
+    public static unsafe void CloseMap()
+    {
+        try
+        {
+            var agent = AgentMap.Instance();
+            if (agent != null && agent->IsAgentActive())
+                agent->Hide();
+        }
+        catch (Exception e)
+        {
+            PluginLog.Warning($"HuntAlerts: could not close map: {e.Message}");
+        }
     }
 
     public static (uint RowId, string Name) GetNearestAetheryte(uint territoryType, float x, float y)
@@ -70,7 +85,7 @@ public static class MapManager
             if (data.Territory.ValueNullable == null) continue;
             if (data.PlaceName.ValueNullable == null) continue;
             if (data.Territory.Value.RowId != territoryType) continue;
-            var n = data.PlaceName.ValueNullable?.Name.ToString() ?? "";
+            var n = data.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
             if (n.EqualsIgnoreCase(name))
             {
                 return (data.RowId, n);
@@ -86,10 +101,10 @@ public static class MapManager
         {
             if (!data.IsAetheryte) continue;
             if (data.PlaceName.ValueNullable == null) continue;
-            var n = data.PlaceName.ValueNullable?.Name.ToString() ?? "";
+            var n = data.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
             if (n.EqualsIgnoreCase(name))
             {
-                var zoneName = data.Territory.ValueNullable?.PlaceName.ValueNullable?.Name.ToString() ?? "";
+                var zoneName = data.Territory.ValueNullable?.PlaceName.ValueNullable?.Name.ExtractText() ?? "";
                 return (data.RowId, n, zoneName);
             }
         }

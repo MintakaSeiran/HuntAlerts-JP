@@ -1,6 +1,7 @@
 using ECommons.Automation;
 using ECommons.DalamudServices;
 using ECommons.Logging;
+using ECommons.Schedulers;
 using System;
 using System.Text;
 
@@ -56,27 +57,54 @@ public static class RelayChannels
     public static void RelayMessage(HuntTrainMessage entry, string channelCommand)
     {
         if (entry == null) return;
-        var text = BuildRelayText(entry);
-        if (string.IsNullOrWhiteSpace(text)) return;
 
-        var line = $"{channelCommand} {text}";
-        if (line.Length > 500) line = line.Substring(0, 500);
+        var wantFlag = HuntAlerts.C.RelayFlagLink
+                      && entry.startTerritoryTypeId != 0
+                      && !(entry.mapLocationX == 0f && entry.mapLocationY == 0f);
+
+        if (!wantFlag)
+        {
+            Svc.Framework.RunOnFrameworkThread(() => Send(entry, channelCommand, false));
+            return;
+        }
+
 
         Svc.Framework.RunOnFrameworkThread(() =>
         {
             try
             {
-                Chat.SendMessage(line);
-                PluginLog.Verbose($"Relayed hunt to {channelCommand}: {text}");
+                MapManager.OpenMapWithMarker(entry.startTerritoryTypeId, entry.mapLocationX, entry.mapLocationY);
             }
             catch (Exception ex)
             {
-                PluginLog.Warning($"Relay failed ({channelCommand}): {ex.Message}");
+                PluginLog.Warning($"Relay flag set failed ({channelCommand}): {ex.Message}");
             }
         });
+        new TickScheduler(() =>
+        {
+            Send(entry, channelCommand, true);
+            MapManager.CloseMap();
+        }, 40);
     }
 
-    private static string BuildRelayText(HuntTrainMessage entry)
+    private static void Send(HuntTrainMessage entry, string channelCommand, bool withFlag)
+    {
+        var text = BuildRelayText(entry, withFlag);
+        if (string.IsNullOrWhiteSpace(text)) return;
+        var line = $"{channelCommand} {text}";
+        if (line.Length > 500) line = line.Substring(0, 500);
+        try
+        {
+            Chat.SendMessage(line);
+            PluginLog.Verbose($"Relayed hunt to {channelCommand}: {text}");
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Warning($"Relay failed ({channelCommand}): {ex.Message}");
+        }
+    }
+
+    private static string BuildRelayText(HuntTrainMessage entry, bool useFlag)
     {
         var isTrain  = entry.huntType == "new_hunt";
         var kind     = CleanOrFallback(entry.huntKind, "Hunt");
@@ -96,13 +124,16 @@ public static class RelayChannels
         sb.Append('!');
 
         var hasZone   = !string.IsNullOrEmpty(zone);
-        var hasCoords = !string.IsNullOrEmpty(coords);
-        if (hasZone || hasCoords)
+        var coordPart = useFlag ? "<flag>" : (!string.IsNullOrEmpty(coords) ? $"({coords})" : "");
+        if (hasZone || coordPart.Length > 0)
         {
             sb.Append(' ');
             if (hasZone) sb.Append(zone);
-            if (hasZone && hasCoords) sb.Append(' ');
-            if (hasCoords) sb.Append('(').Append(coords).Append(')');
+            if (coordPart.Length > 0)
+            {
+                if (hasZone) sb.Append(' ');
+                sb.Append(coordPart);
+            }
             sb.Append(inst);
         }
         else if (inst.Length > 0)

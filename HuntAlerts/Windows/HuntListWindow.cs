@@ -111,6 +111,15 @@ public class HuntListWindow : Window
         ImGui.TextUnformatted($"  ·  {count} cached");
         ImGui.PopStyleColor();
 
+        if (count > 0)
+        {
+            ImGui.SameLine();
+            if (Components.ActionButton(FontAwesomeIcon.Trash, "Clear", ButtonRole.Warn))
+                Service.MessageCacheManager.ClearHistory();
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Clear this list.\nAlready-posted chat links keep working.");
+        }
+
         if (Service.Snooze.IsSnoozed)
         {
             ImGui.SameLine();

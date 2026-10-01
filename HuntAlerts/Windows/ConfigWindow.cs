@@ -1,5 +1,6 @@
 using Dalamud.Game.Text;
 using Dalamud.Interface;
+using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Windowing;
 using ECommons.DalamudServices;
 using ECommons.IPC;
@@ -10,6 +11,7 @@ using HuntAlerts.Messaging;
 using HuntAlerts.Services;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Numerics;
 
@@ -35,6 +37,9 @@ public class ConfigWindow : Window, IDisposable
     private string _worldSearch = "";
     private string _srankWorldSearch = "";
     private bool _debugUnlocked = false;
+
+    private readonly FileDialogManager _fileDialog = new();
+    private string _soundResult = "";
 
     private int    _dbgType       = 0;
     private bool[] _dbgKinds      = { false, false, false, true };
@@ -90,6 +95,89 @@ public class ConfigWindow : Window, IDisposable
 
             ImGui.EndTable();
         }
+
+        _fileDialog.Draw();
+    }
+
+    private enum SoundKind { Train, SRank }
+
+    private static readonly string[] _soundNames =
+        Enumerable.Range(0, 17).Select(i => i == 0 ? "None" : $"Sound {i}").ToArray();
+
+    private void DrawSoundSettings(SoundKind kind, string gameLabel, CustomSound sound)
+    {
+        var isTrain = kind == SoundKind.Train;
+        ImGui.PushID((int)kind);
+
+        var useCustom = isTrain ? HuntAlerts.C.UseCustomTrainSound : HuntAlerts.C.UseCustomSRankSound;
+
+        ImGui.BeginDisabled(useCustom);
+        var game = isTrain ? HuntAlerts.C.SoundEffect : HuntAlerts.C.SRankSoundEffect;
+        if (ImGui.Combo(gameLabel, ref game, _soundNames, _soundNames.Length))
+        {
+            if (isTrain) HuntAlerts.C.SoundEffect = game; else HuntAlerts.C.SRankSoundEffect = game;
+            if (game != 0) UIGlobals.PlayChatSoundEffect((uint)game);
+            HuntAlerts.C.Save();
+        }
+        ImGui.EndDisabled();
+
+        if (ImGui.Checkbox($"Custom {(isTrain ? "train" : "S-Rank")} MP3", ref useCustom))
+        {
+            if (isTrain) HuntAlerts.C.UseCustomTrainSound = useCustom; else HuntAlerts.C.UseCustomSRankSound = useCustom;
+            HuntAlerts.C.Save();
+        }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip($"Play your own MP3 for {(isTrain ? "train" : "S-Rank")} alerts instead of the {gameLabel} above.");
+
+        var has = sound.Exists;
+        ImGui.SameLine();
+        if (Components.ActionButton(FontAwesomeIcon.FolderOpen, has ? "Change" : "Choose MP3", ButtonRole.Accent))
+        {
+            _fileDialog.OpenFileDialog("Choose a sound (.mp3)", ".mp3", (ok, path) =>
+            {
+                if (!ok || string.IsNullOrEmpty(path)) return;
+                var err = sound.Import(path);
+                if (err == null)
+                {
+                    _soundResult = $"Custom {gameLabel.ToLowerInvariant()} saved.";
+                    if (isTrain) HuntAlerts.C.UseCustomTrainSound = true; else HuntAlerts.C.UseCustomSRankSound = true;
+                    HuntAlerts.C.Save();
+                }
+                else
+                {
+                    _soundResult = "Failed: " + err;
+                }
+            });
+        }
+
+        if (has)
+        {
+            var vol = isTrain ? HuntAlerts.C.CustomTrainSoundVolume : HuntAlerts.C.CustomSRankSoundVolume;
+
+            ImGui.SameLine();
+            if (Components.ActionButton(FontAwesomeIcon.Play, "Test", ButtonRole.Success))
+                sound.Play(vol);
+            ImGui.SameLine();
+            if (Components.ActionButton(FontAwesomeIcon.Trash, "Remove", ButtonRole.Warn))
+            {
+                sound.Remove();
+                _soundResult = $"Custom {gameLabel.ToLowerInvariant()} removed.";
+            }
+
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(110);
+            var volPct = vol * 100f;
+            if (ImGui.SliderFloat("##vol", ref volPct, 0f, 100f, "vol %.0f%%"))
+            {
+                var v = Math.Clamp(volPct / 100f, 0f, 1f);
+                if (isTrain) HuntAlerts.C.CustomTrainSoundVolume = v; else HuntAlerts.C.CustomSRankSoundVolume = v;
+                HuntAlerts.C.Save();
+            }
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Custom sound volume");
+        }
+
+        ImGui.PopID();
     }
 
     private void DrawSidebar()
@@ -152,6 +240,32 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Flag Map automatically on arrival", ref flag))
         { HuntAlerts.C.OpenMapOnArrival = flag; HuntAlerts.C.Save(); }
 
+        var hideInDuty = HuntAlerts.C.HideAlertsInDuty;
+        if (ImGui.Checkbox("Hide alerts while in a duty", ref hideInDuty))
+        { HuntAlerts.C.HideAlertsInDuty = hideInDuty; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("While in instanced content (dungeon, raid, trial, etc), skip the popup, chat line and sound.\nHunts are still recorded and appear in Recent Hunts afterwards.");
+        if (hideInDuty && Svc.Condition.InDuty())
+        {
+            ImGui.SameLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, Theme.Accent);
+            ImGui.TextUnformatted("(in duty now)");
+            ImGui.PopStyleColor();
+        }
+
+        var muteInCutscene = HuntAlerts.C.MuteAlertSoundInCutscene;
+        if (ImGui.Checkbox("Mute alert sounds during cutscenes", ref muteInCutscene))
+        { HuntAlerts.C.MuteAlertSoundInCutscene = muteInCutscene; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("While watching a cutscene, skip only the alert sound.\nThe popup and chat line still appear as normal.");
+        if (muteInCutscene && Svc.Condition.InCutscene())
+        {
+            ImGui.SameLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, Theme.Accent);
+            ImGui.TextUnformatted("(in cutscene now)");
+            ImGui.PopStyleColor();
+        }
+
         ImGui.Spacing();
         Components.SectionHeader("Chat");
 
@@ -202,15 +316,11 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Combo("Default Relay Channel", ref relayIdx, relayNames, relayNames.Length))
         { HuntAlerts.C.DefaultRelayChannel = RelayChannels.All[relayIdx].Command; HuntAlerts.C.Save(); }
 
-        var soundNames = Enumerable.Range(0, 17)
-            .Select(i => i == 0 ? "None" : $"Sound {i}").ToArray();
-        var sound = HuntAlerts.C.SoundEffect;
-        if (ImGui.Combo("Sound Effect", ref sound, soundNames, soundNames.Length))
-        {
-            HuntAlerts.C.SoundEffect = sound;
-            if (sound != 0) UIGlobals.PlayChatSoundEffect((uint)sound);
-            HuntAlerts.C.Save();
-        }
+        var relayFlag = HuntAlerts.C.RelayFlagLink;
+        if (ImGui.Checkbox("Add clickable map flag when relaying", ref relayFlag))
+        { HuntAlerts.C.RelayFlagLink = relayFlag; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Appends a <flag> map link so anyone in the channel can click the coordinates,\neven without this plugin. Sets your map flag to the hunt location, which opens the map.");
 
         var snoozeOpts  = new (string Name, int Value)[] { ("5 min", 5), ("15 min", 15), ("30 min", 30), ("60 min", 60), ("2 hours", 120) };
         var snoozeNames = snoozeOpts.Select(o => o.Name).ToArray();
@@ -229,6 +339,16 @@ public class ConfigWindow : Window, IDisposable
         {
             if (Components.ActionButton(FontAwesomeIcon.Moon, $"Snooze {HuntAlerts.C.SnoozeDefaultMinutes}m", ButtonRole.Warn))
                 Service.Snooze.SnoozeDefault();
+        }
+
+        DrawSoundSettings(SoundKind.Train, "Train Sound", Sounds.Train);
+        ImGui.Spacing();
+        DrawSoundSettings(SoundKind.SRank, "S-Rank Sound", Sounds.SRank);
+        if (!string.IsNullOrEmpty(_soundResult))
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, Theme.Subtle);
+            ImGui.TextUnformatted(_soundResult);
+            ImGui.PopStyleColor();
         }
 
         ImGui.Spacing();
@@ -590,9 +710,7 @@ public class ConfigWindow : Window, IDisposable
             ImGui.TextUnformatted($"  ·  {FormatAgo(ago)} ago");
             ImGui.PopStyleColor();
         }
-
-        ImGui.Spacing();
-        Components.FieldRow("Server", socket.ServerUri);
+        
 
         if (!string.IsNullOrEmpty(socket.LastConnectionError))
         {

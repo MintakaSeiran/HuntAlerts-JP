@@ -18,11 +18,12 @@ namespace HuntAlerts
                 var existing = Svc.PluginInterface.GetPluginConfig() as Configuration;
                 if (existing != null)
                 {
-                    if (existing.Version >= 3) return existing;
+                    if (existing.Version >= 4) return existing;
 
-                    if (existing.Version == 2)
+                    if (existing.Version == 2) MigrateV2ToV3(existing);
+                    if (existing.Version == 3)
                     {
-                        MigrateV2ToV3(existing);
+                        MigrateV3ToV4(existing);
                         existing.Save();
                         return existing;
                     }
@@ -55,6 +56,13 @@ namespace HuntAlerts
             c.SRankScope = ScopeMode.CurrentDatacenterOnly;
             c.Version    = 3;
             PluginLog.Information("HuntAlerts: migrated config v2 → v3 (S Rank world/DC selection added; train and general settings preserved).");
+        }
+
+        private static void MigrateV3ToV4(Configuration c)
+        {
+            c.SRankSoundEffect = c.SoundEffect;
+            c.Version = 4;
+            PluginLog.Information("HuntAlerts: migrated config v3 → v4 (per-type sound effects).");
         }
 
         private static void ApplyDefaults(Configuration c)

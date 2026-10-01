@@ -37,6 +37,8 @@ namespace HuntAlerts
             WindowSystem.AddWindow(Service.ToastWindow);
             Service.WhatsNewWindow = new();
             WindowSystem.AddWindow(Service.WhatsNewWindow);
+            Service.AlertingNoticeWindow = new();
+            WindowSystem.AddWindow(Service.AlertingNoticeWindow);
 
             Svc.Commands.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
@@ -60,12 +62,19 @@ namespace HuntAlerts
                 C.LastSeenChangelogVersion = Changelog.Revision;
             }
 
+            if (C.AlertingNoticeVersion < AlertNotice.Version)
+            {
+                Service.AlertingNoticeWindow.IsOpen = true;
+                C.AlertingNoticeVersion = AlertNotice.Version;
+            }
+
             C.Save();
         }
 
         public void Dispose()
         {
             ChatWaypointListener.Disable();
+            Helpers.Sounds.DisposeAll();
             WindowSystem.RemoveAllWindows();
             Service.ConfigWindow.Dispose();
 
@@ -78,6 +87,7 @@ namespace HuntAlerts
             Service.WorldArrowWindow = null!;
             Service.ToastWindow = null!;
             Service.WhatsNewWindow = null!;
+            Service.AlertingNoticeWindow = null!;
         }
 
         private void OnCommand(string command, string args)

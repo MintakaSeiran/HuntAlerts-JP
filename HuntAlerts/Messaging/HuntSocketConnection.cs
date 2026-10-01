@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Dalamud.Game;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ECommons;
@@ -23,9 +24,11 @@ namespace HuntAlerts.Messaging;
 
 public sealed class HuntSocketConnection : IDisposable
 {
-    public const string DefaultServerUri = "wss://huntalerts.pro:24842";
+    public const string DefaultServerUri = "wss://huntalerts.pro:24845";
 
-    public enum ConnectionState { Unknown, Connecting, Connected, Disconnected, Reconnecting, Error }
+    public static readonly bool ConnectionEnabled = true;
+
+    public enum ConnectionState { Unknown, Connecting, Connected, Disconnected, Reconnecting, Error, Disabled }
 
     private SocketIOClient.SocketIO? socket;
     private CancellationTokenSource? cancellationTokenSource;
@@ -63,6 +66,14 @@ public sealed class HuntSocketConnection : IDisposable
 
     private void Connect()
     {
+        if (!ConnectionEnabled)
+        {
+            SetSocketState(ConnectionState.Disabled);
+            LogConnection("INFO", "Server connection disabled in this build.");
+            PluginLog.Information("HuntAlerts: server connection disabled (ConnectionEnabled = false).");
+            return;
+        }
+
         cancellationTokenSource = new CancellationTokenSource();
         socket = new SocketIOClient.SocketIO(ServerUri, new SocketIOOptions
         {
@@ -108,7 +119,7 @@ public sealed class HuntSocketConnection : IDisposable
         });
 
         SetSocketState(ConnectionState.Connecting);
-        LogConnection("INFO", $"Connecting to {ServerUri}...");
+        LogConnection("INFO", $"Connecting...");
         socket.ConnectAsync().ContinueWith(task =>
         {
             if (task.IsFaulted)
@@ -124,6 +135,13 @@ public sealed class HuntSocketConnection : IDisposable
 
     public async Task ReconnectAsync()
     {
+        if (!ConnectionEnabled)
+        {
+            SetSocketState(ConnectionState.Disabled);
+            LogConnection("INFO", "Reconnect ignored; server connection disabled in this build.");
+            return;
+        }
+
         LogConnection("INFO", "Manual reconnect requested.");
         SetSocketState(ConnectionState.Connecting);
         try
@@ -291,9 +309,12 @@ public sealed class HuntSocketConnection : IDisposable
                 mapLocationCoords = new Vector2((float)cx, (float)cy);
             }
 
+            PluginLog.Information($"[Resolve] train raw aetheryte='{hm.AetheryteName}' zone='{hm.LocationName}' -> stripped aetheryte='{aetheryteName}' zone='{startZone}'");
+
             if (TryGetOpenWorldTerritory(hm.LocationName, out var tt))
             {
                 startTerritoryTypeId = tt;
+                PluginLog.Information($"[Resolve] zone '{hm.LocationName}' -> territory {tt}.");
                 if (aetheryteName == "invalid" || string.IsNullOrEmpty(aetheryteName))
                 {
                     var (id, name) = (cx, cy) is (float ccx, float ccy)
@@ -308,13 +329,21 @@ public sealed class HuntSocketConnection : IDisposable
                     if (match is not null)
                     {
                         aetheryteId = match.Value.RowId;
+                        PluginLog.Information($"[Resolve] matched aetheryte '{aetheryteName}' in territory {tt} -> id {aetheryteId}.");
+                    }
+                    else if (MapManager.LookupAetheryteByNameAnywhere(aetheryteName) is { } global)
+                    {
+                        aetheryteId = global.RowId;
+                        aetheryteName = global.Name;
+                        if (!string.IsNullOrEmpty(global.ZoneName)) startZone = global.ZoneName;
+                        PluginLog.Information($"[Resolve] aetheryte '{aetheryteName}' not in territory {tt} but matched globally -> id {aetheryteId}.");
                     }
                     else
                     {
                         var (id, name) = (cx, cy) is (float ccx, float ccy)
                             ? MapManager.GetNearestAetheryte(tt, ccx, ccy)
                             : MapManager.GetZonePrimaryAetheryte(tt);
-                        PluginLog.Verbose($"Aetheryte '{aetheryteName}' not in zone '{hm.LocationName}'; using zone fallback '{name}' (id {id}).");
+                        PluginLog.Information($"[Resolve] aetheryte '{aetheryteName}' NOT found anywhere; fell back to '{name}' (id {id}).");
                         aetheryteId = id;
                         aetheryteName = name;
                     }
@@ -383,13 +412,25 @@ public sealed class HuntSocketConnection : IDisposable
         var link = Service.MessageCacheManager.AddMessage(htMessage);
         Service.IPCManager.OnHuntTrainMessageReceived(htMessage);
         Service.IPCManager.OnHuntAlertMessageReceived(typedAlert);
+
+        if (Utilities.HideAlertsNow)
+        {
+            PluginLog.Verbose("Train alert hidden: in duty.");
+            return;
+        }
+
         Service.ToastWindow.Show(htMessage);
 
         if (config.ChatAlertsEnabled)
             PrintChat(BuildLinkedLine(link, $"{hm.Kind} train starting on {hm.World}! (Click for info)", config.TextColor));
 
-        if (config.SoundEffect != 0)
-            UIGlobals.PlayChatSoundEffect((uint)config.SoundEffect);
+        if (!Utilities.MuteAlertSoundNow)
+        {
+            if (config.UseCustomTrainSound && Sounds.Train.Exists)
+                Sounds.Train.Play(config.CustomTrainSoundVolume);
+            else if (config.SoundEffect != 0)
+                UIGlobals.PlayChatSoundEffect((uint)config.SoundEffect);
+        }
     }
 
     private void HandleSRankEvent(HuntMessage hm)
@@ -492,6 +533,12 @@ public sealed class HuntSocketConnection : IDisposable
                     {
                         aetheryteId = match.Value.RowId;
                     }
+                    else if (MapManager.LookupAetheryteByNameAnywhere(startLocation) is { } global)
+                    {
+                        aetheryteId = global.RowId;
+                        startLocation = global.Name;
+                        if (!string.IsNullOrEmpty(global.ZoneName)) locationName = global.ZoneName;
+                    }
                     else
                     {
                         var (id, name) = MapManager.GetZonePrimaryAetheryte(tt);
@@ -552,11 +599,20 @@ public sealed class HuntSocketConnection : IDisposable
                 startTerritoryTypeId,
                 instance,
                 mapLocationCoords,
-                Svc.Data.GetExcelSheet<BNpcName>().FirstOrNull(r => r.Singular.ExtractText().Equals(creatureName.Trim(), StringComparison.OrdinalIgnoreCase))?.RowId);
+                Svc.Data.GetExcelSheet<BNpcName>(ClientLanguage.English).FirstOrNull(r => r.Singular.ExtractText().Equals(creatureName.Trim(), StringComparison.OrdinalIgnoreCase))?.RowId);
 
             var link = Service.MessageCacheManager.AddMessage(htMessage);
             Service.IPCManager.OnHuntTrainMessageReceived(htMessage);
             Service.IPCManager.OnHuntAlertMessageReceived(typedAlert);
+
+            // Recorded to history + IPC above; withhold the intrusive alert while
+            // in instanced content (still visible in Recent Hunts afterwards).
+            if (Utilities.HideAlertsNow)
+            {
+                PluginLog.Verbose("S Rank alert hidden: in duty.");
+                return;
+            }
+
             Service.ToastWindow.Show(htMessage);
 
             var label = instance > 1
@@ -566,14 +622,24 @@ public sealed class HuntSocketConnection : IDisposable
             if (config.ChatAlertsEnabled)
                 PrintChat(BuildLinkedLine(link, label, config.SRankTextColor));
 
-            if (config.SoundEffect != 0)
-                UIGlobals.PlayChatSoundEffect((uint)config.SoundEffect);
+            if (!Utilities.MuteAlertSoundNow)
+            {
+                if (config.UseCustomSRankSound && Sounds.SRank.Exists)
+                    Sounds.SRank.Play(config.CustomSRankSoundVolume);
+                else if (config.SRankSoundEffect != 0)
+                    UIGlobals.PlayChatSoundEffect((uint)config.SRankSoundEffect);
+            }
         }
         else
         {
             if (!config.SRankKillNotifications || !config.ChatAlertsEnabled)
             {
                 PluginLog.Verbose("S Rank kill notification suppressed by setting.");
+                return;
+            }
+            if (Utilities.HideAlertsNow)
+            {
+                PluginLog.Verbose("S Rank kill notification hidden: in duty.");
                 return;
             }
             var label = $"{hm.Kind} S Rank {creatureName} on {hm.World} was killed at {HuntMessageFormatting.ConvertTime(deathTime)}.";

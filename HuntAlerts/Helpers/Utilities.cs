@@ -11,11 +11,23 @@ using Lumina.Excel.Sheets;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Plugin.Services;
 
 namespace HuntAlerts.Helpers
 {
     public static class Utilities
     {
+
+        public static bool InDuty(this ICondition condition) => condition.Any(ConditionFlag.BoundByDuty, ConditionFlag.BoundByDuty56, ConditionFlag.BoundByDuty95);
+
+        public static bool InCutscene(this ICondition condition) => condition.Any(ConditionFlag.OccupiedInCutSceneEvent, ConditionFlag.WatchingCutscene, ConditionFlag.WatchingCutscene78);
+
+        public static bool HideAlertsNow => HuntAlerts.C.HideAlertsInDuty && Svc.Condition.InDuty();
+
+        // Sound-only gate: the popup and chat line still show; just the audio is muted.
+        public static bool MuteAlertSoundNow => HuntAlerts.C.MuteAlertSoundInCutscene && Svc.Condition.InCutscene();
+
         public static unsafe void OpenPartyFinder()
         {
             try
