@@ -1,60 +1,74 @@
-# HuntAlerts-JP — 日本語Relayフォーク
+# HuntAlerts-JP - Japanese Relay Fork
 
-[HuntAlerts](https://github.com/huntsffxiv/huntalerts) の日本語Relay改修版です。元の作者はAsuna / HuntsFFXIV、日本語Relay改修はMintakaSeiran。
+A Japanese relay fork of [HuntAlerts](https://github.com/huntsffxiv/huntalerts). Original authors: Asuna / HuntsFFXIV. Japanese relay changes: MintakaSeiran.
 
-GitHubの元リポジトリをForkし、[現在の上流（GitLab）](https://projects.gamba.pro/Asuna/huntalerts) の履歴を取り込んでいます。`main` は上流1.4.1.7を取り込んだ基準ブランチ、`codex/japanese-relay` はこのREADMEに記載する改修ブランチです。[日本語Relayだけの差分](https://github.com/MintakaSeiran/HuntAlerts-JP/compare/main...codex/japanese-relay) を確認できます。
+This repository was forked from the original GitHub repository and incorporates the history of the [current upstream on GitLab](https://projects.gamba.pro/Asuna/huntalerts). The `main` branch contains the upstream 1.4.1.7 baseline. The `jp_relay` branch contains this fork's changes. See the [changes compared with the upstream baseline](https://github.com/MintakaSeiran/HuntAlerts-JP/compare/main...jp_relay).
 
-このフォークの問い合わせ先は [HuntAlerts-JPのIssues](https://github.com/MintakaSeiran/HuntAlerts-JP/issues) です。通常版の配布元は `https://puni.sh/api/repository/asuna`、通常版のサポート先は [Puni.sh Discord](https://discord.gg/punishxiv) の `asuna-plugins` チャンネルです。
+For this fork, use [HuntAlerts-JP Issues](https://github.com/MintakaSeiran/HuntAlerts-JP/issues). The original plugin repository is `https://puni.sh/api/repository/asuna`; its support channel is `asuna-plugins` in the [Puni.sh Discord](https://discord.gg/punishxiv).
 
-上流のプロジェクト指定に従い、ライセンスは [AGPL-3.0-or-later](LICENSE)。ECommonsはサブモジュール側のライセンスを参照してください。
+This fork retains the upstream project's [AGPL-3.0-or-later](LICENSE) license declaration. Refer to the ECommons submodule for its license.
 
-## 日本語Relay改修版
+## Download and Installation
 
-2026-10-01。上流 `69ec1140add0e5ce97553785c8ad04d04ac68224`（1.4.1.7）を基準にしたローカル改修。
-公式配布とは別の成果物で、表示名は `HuntAlerts (日本語Relay)`、InformationalVersionは `1.4.1.7-jp-relay.1`。
-AssemblyVersionとDalamudのmanifestは上流と同じ `1.4.1.7`。API 15 / .NET 10 / C# 14 / x64。
+[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min/HuntAlerts-JP-1.4.1.7_jp_min.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min)
 
-### 共有文
+This is a prerelease: the build and automated checks pass, but in-game behavior has not been verified.
 
-AS Mob Plateの募集文に合わせて、日本語Relayは次の形式にする。
+To install through Dalamud, add this URL to **Custom Plugin Repositories**:
 
 ```text
-[S] ゾーナ・シーカー / 西ザナラーン / 最寄り: ホライズン / DC: Meteor / サーバー: Yojimbo / POS: (26.8, 16.9)
+https://raw.githubusercontent.com/MintakaSeiran/HuntAlerts-JP/jp_relay/pluginmaster.json
 ```
 
-- DCは通知の対象ワールドから取得する。現在いるDC・ワールドへ置き換えない。
-- モブ名は英語のBNpcNameと日本語の同一行IDを照合する。エリア・エーテライトは通知のIDと日本語PlaceNameを使用し、IDがなければ英語名を照合する。取得できない名前は通知の元の表記を使う。
-- 「最寄り」は上流が通知に設定した移動先エーテライトを使用する。今回、距離判定の方式は変更していない。
-- 数値の座標が有効ならPOSを小数1桁で表示する。過去の通知などは座標文字列からも取得し、不明・0・非数・負数なら省略する。
-- `Add clickable map flag when relaying` がONで地図用ID・座標がそろう場合、末尾に `<flag>` を追加する。POSは併記する。旗の設定で例外が発生した場合はリンクを付けずに送信する。
-- 2以上のインスタンス番号を表示する。確定できない開始ETは付けない。不明なDC・サーバー・名前の項目は省略する。
-- ツアーは `[モブハントツアー] 黄金 / ...` などの形式にし、Sランクと区別する。
-- コマンド込みでUTF-8の500バイトを超える文章は、情報を切り捨てず送信を中止し、自分のチャットに理由を表示する。
+This fork retains the internal name `HuntAlerts`. Disable the original plugin and avoid installing or updating both variants simultaneously. Verify that the installed plugin's repository URL points to `MintakaSeiran/HuntAlerts-JP`. The same numeric version is used by upstream, so an existing upstream installation is not guaranteed to switch variants through an automatic update.
 
-### 設定と導入
+For manual development installation, extract the entire ZIP into a development plugin folder and register `HuntAlerts.dll` in Dalamud's development plugin locations. Keep the manifest and all bundled dependencies beside the DLL. After loading, verify that the display name includes the Japanese relay suffix. To revert, disable this fork and enable the original plugin.
 
-1. 通常版HuntAlertsを無効化する。同じ内部名・コマンドを使うので同時ロードしない。
-2. `HuntAlerts/bin/Release/HuntAlerts/latest.zip` を開発用プラグインの任意フォルダーへ全ファイル展開し、Dalamudの開発用プラグイン登録で `HuntAlerts.dll` を指定する。あるいは `HuntAlerts/bin/Release/HuntAlerts.dll` を直接登録する。
-3. ロード後、プラグイン名が `HuntAlerts (日本語Relay)` と表示されることを確認する。
-4. `/huntalerts settings` → Notificationsの `Relayを日本語で送信（AS Mob Plate形式）` を確認する。既定ON。OFFなら従来の英語文へ戻る。
-5. 通知のRelayボタンで設定したチャンネルへ共有する。横の矢印から `Echo (test)` を選ぶと、自分向けに実際の文章を確認できる。
+## Japanese Relay Changes
 
-設定追加は `JapaneseRelay=true` の1項目。既存設定ファイルに項目がなくてもONで読み込む。設定Version 4、履歴Version 2、既定共有先、IPCの引数・型は維持する。通常版の自動更新でこの改修は取り込まれない。戻す場合は改修版を無効化して通常版を有効化する。
+Updated October 1, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
 
-今回、導入済みプラグイン・設定ファイルへの上書きやゲーム内チャット送信は実施していない。
+InformationalVersion: `1.4.1.7_jp_min`. AssemblyVersion and the Dalamud manifest version remain `1.4.1.7`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
 
-### ビルドと検証
+### Relay Message Format
 
-ECommonsはサブモジュール `96b6bbc9896aead9f67ea1b245b89ed510a61c88`（3.2.1.6）。上流のlock fileを維持し、ECommons.IPC 1.0.0.19、SocketIOClient 3.1.1、NAudio 2.2.1を使用する。
+Messages follow the layout used by AS Mob Plate recruitment comments. This example is translated into English for documentation; actual relay messages use Japanese names and labels where available:
 
-このリポジトリのルートで実行。初回取得時はサブモジュールも取得する：
+```text
+[S] Zona Seeker / Western Thanalan / Nearest: Horizon / DC: Meteor / Server: Yojimbo / POS: (26.8, 16.9)
+```
+
+- The DC is resolved from the alert's target world, not the player's current DC or world.
+- Creature names are matched between English and Japanese BNpcName rows by row ID. Area and aetheryte names use the alert's IDs and Japanese PlaceName data, with English name matching when IDs are unavailable. Untranslated names retain their original spelling.
+- The nearest aetheryte field uses the destination selected by upstream for the alert. This fork does not change the distance calculation.
+- Valid coordinates appear in POS with one decimal place. Older alerts can also use coordinate strings. Missing, zero, non-finite, or negative coordinates are omitted.
+- When `Add clickable map flag when relaying` is enabled and the required map ID and coordinates are available, `<flag>` is appended. POS remains visible. If setting the flag throws an exception, the message is sent without the link.
+- Instance numbers of 2 or higher are included. No unconfirmed start ET is added. Unknown DC, server, and name fields are omitted.
+- Train alerts use a Japanese hunt train label and expansion name, distinguishing them from S-rank alerts.
+- Messages exceeding 500 UTF-8 bytes, including the channel command, are not sent. An explanation appears in the player's chat instead of silently truncating information.
+
+### Settings
+
+1. Open `/huntalerts settings` and find the Japanese relay checkbox under Notifications. Its Japanese label means "Send Relay in Japanese (AS Mob Plate format)." It is enabled by default. Disable it to restore the original English format.
+2. Use the alert's Relay button to share through the configured channel.
+3. Select `Echo (test)` from the adjacent arrow menu to check the actual message in your own chat before using a shared channel.
+
+The only added configuration field is `JapaneseRelay=true`. It defaults to enabled even when absent from an existing configuration file. Configuration version 4, history version 2, the default relay channel, and IPC argument types remain unchanged. Updates to the original plugin do not include this fork's changes.
+
+Development and automated verification did not overwrite installed plugins or configuration files, or send in-game chat messages.
+
+## Building and Verification
+
+ECommons is pinned to submodule commit `96b6bbc9896aead9f67ea1b245b89ed510a61c88` (3.2.1.6). Upstream lock files are retained, using ECommons.IPC 1.0.0.19, SocketIOClient 3.1.1, and NAudio 2.2.1.
+
+Clone the feature branch and its submodule:
 
 ```powershell
-git clone --recurse-submodules --branch codex/japanese-relay https://github.com/MintakaSeiran/HuntAlerts-JP.git
+git clone --recurse-submodules --branch jp_relay https://github.com/MintakaSeiran/HuntAlerts-JP.git
 cd HuntAlerts-JP
 ```
 
-以下は開発に使用したWindows端末のSDK配置例。別の環境では、`$xlDotnet` を実在する.NET 10 SDKの `dotnet.exe` へ変更する。ビルド前にSDKとDLL参照先を確認する。Dalamud API 15の同一配布DLL一式が必要。
+Run the following commands from the repository root. The SDK path is an example from the Windows development machine; on another machine, set `$xlDotnet` to an existing .NET 10 SDK's `dotnet.exe`. Verify the SDK and DLL reference directory before building. All host DLLs must come from the same Dalamud API 15 distribution.
 
 ```powershell
 $xlDotnet = Join-Path $env:LOCALAPPDATA 'Microsoft/dotnet10-sdk/dotnet.exe'
@@ -69,4 +83,6 @@ if ($LASTEXITCODE -ne 0) { throw 'Build failed' }
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
 ```
 
-SDK 10.0.401 / MSBuild 18.9.11、同一配布のDalamud 15.0.3.5 DLLを確認してReleaseビルド成功（警告0・エラー0）。32項目のゲーム非依存検証に成功。実機の日本語シート照合、設定再読込、FC/CWLS送信、クリック可能な地図リンクは未確認。まずEchoで文章を確認し、その後に使用する共有先で確認する。
+Output: `HuntAlerts/bin/Release/HuntAlerts/latest.zip`.
+
+The Release build succeeded with zero warnings and zero errors using SDK 10.0.401, MSBuild 18.9.11, and DLLs from Dalamud 15.0.3.5. All 32 game-independent checks passed. In-game Japanese sheet lookups, configuration reloads, FC/CWLS delivery, and clickable map links remain unverified.

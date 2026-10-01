@@ -1,0 +1,24 @@
+[
+  {
+    "Author": "Asuna / HuntsFFXIV; Japanese Relay: MintakaSeiran",
+    "Name": "HuntAlerts (日本語Relay)",
+    "InternalName": "HuntAlerts",
+    "AssemblyVersion": "1.4.1.7",
+    "Description": "HuntAlertsの日本語Relayフォーク。AS Mob Plate形式でモブ名・エリア・最寄り・DC・サーバー・POSを共有します。実機未確認のプレビュー版です。",
+    "Punchline": "日本語でモブハント通知を共有",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 15,
+    "RepoUrl": "https://github.com/MintakaSeiran/HuntAlerts-JP",
+    "Tags": [
+      "hunt",
+      "train",
+      "rank",
+      "japanese"
+    ],
+    "IconUrl": "https://projects.gamba.pro/Asuna/releases/-/raw/main/HuntAlerts/FFXIV_Hunts_logo.png",
+    "LastUpdate": 1790866648,
+    "DownloadLinkInstall": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min/HuntAlerts-JP-1.4.1.7_jp_min.zip",
+    "DownloadLinkUpdate": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min/HuntAlerts-JP-1.4.1.7_jp_min.zip",
+    "DownloadLinkTesting": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min/HuntAlerts-JP-1.4.1.7_jp_min.zip"
+  }
+]
