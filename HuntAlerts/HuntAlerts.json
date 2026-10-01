@@ -1,12 +1,12 @@
 {
-    "Author": "Asuna",
-    "Name": "HuntAlerts",
+    "Author": "Asuna / HuntsFFXIV; Japanese Relay: MintakaSeiran",
+    "Name": "HuntAlerts (日本語Relay)",
     "Punchline": "Notifies you when hunt trains are starting soon\nSupports NA/EU/OCE/JP",
     "Description": "Notifies you when hunt trains are starting soon\nSupports NA/EU/OCE/JP",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 15,
     "IconUrl": "https://projects.gamba.pro/Asuna/releases/-/raw/main/HuntAlerts/FFXIV_Hunts_logo.png",
-    "RepoUrl": "https://projects.gamba.pro/Asuna/HuntAlerts",
+    "RepoUrl": "https://github.com/MintakaSeiran/HuntAlerts-JP",
     "Tags": [
         "hunt",
         "train",

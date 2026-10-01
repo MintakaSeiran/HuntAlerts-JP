@@ -60,7 +60,7 @@ public static class RelayChannels
 
         var wantFlag = HuntAlerts.C.RelayFlagLink
                       && entry.startTerritoryTypeId != 0
-                      && !(entry.mapLocationX == 0f && entry.mapLocationY == 0f);
+                      && JapaneseRelayText.HasMapPosition(entry);
 
         if (!wantFlag)
         {
@@ -71,41 +71,55 @@ public static class RelayChannels
 
         Svc.Framework.RunOnFrameworkThread(() =>
         {
+            var flagSet = false;
             try
             {
                 MapManager.OpenMapWithMarker(entry.startTerritoryTypeId, entry.mapLocationX, entry.mapLocationY);
+                flagSet = true;
             }
             catch (Exception ex)
             {
                 PluginLog.Warning($"Relay flag set failed ({channelCommand}): {ex.Message}");
             }
+            new TickScheduler(() =>
+            {
+                Send(entry, channelCommand, flagSet);
+                if (flagSet) MapManager.CloseMap();
+            }, 40);
         });
-        new TickScheduler(() =>
-        {
-            Send(entry, channelCommand, true);
-            MapManager.CloseMap();
-        }, 40);
     }
 
     private static void Send(HuntTrainMessage entry, string channelCommand, bool withFlag)
     {
-        var text = BuildRelayText(entry, withFlag);
-        if (string.IsNullOrWhiteSpace(text)) return;
-        var line = $"{channelCommand} {text}";
-        if (line.Length > 500) line = line.Substring(0, 500);
         try
         {
+            var text = BuildRelayText(entry, withFlag);
+            if (string.IsNullOrWhiteSpace(text)) return;
+            if (!JapaneseRelayText.FitsChat(channelCommand, text))
+            {
+                Svc.Chat.PrintError("HuntAlerts: Relay文が500バイトを超えたため送信できません。名前や場所を省略せず、送信を中止しました。");
+                return;
+            }
+            var line = $"{channelCommand} {text}";
             Chat.SendMessage(line);
             PluginLog.Verbose($"Relayed hunt to {channelCommand}: {text}");
         }
         catch (Exception ex)
         {
             PluginLog.Warning($"Relay failed ({channelCommand}): {ex.Message}");
+            Svc.Chat.PrintError("HuntAlerts: Relayの送信に失敗しました。ログを確認してください。");
         }
     }
 
     private static string BuildRelayText(HuntTrainMessage entry, bool useFlag)
     {
+        if (HuntAlerts.C.JapaneseRelay)
+        {
+            var names = RelayJapaneseNames.Resolve(entry);
+            var dc = WorldData.TryGetWorld(entry.huntWorld?.Trim() ?? "", out var huntWorld) ? huntWorld.Datacenter : "";
+            return JapaneseRelayText.Build(entry, useFlag, names.Creature, names.Zone, names.Aetheryte, dc);
+        }
+
         var isTrain  = entry.huntType == "new_hunt";
         var kind     = CleanOrFallback(entry.huntKind, "Hunt");
         var world    = Clean(entry.huntWorld);

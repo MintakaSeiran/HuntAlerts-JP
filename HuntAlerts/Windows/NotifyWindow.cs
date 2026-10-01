@@ -217,7 +217,7 @@ public class NotifyWindow : Window
             ? "/p"
             : HuntAlerts.C.DefaultRelayChannel;
         var defaultDisplay = RelayChannels.DisplayFor(defaultChannel);
-        if (Components.ActionButton(FontAwesomeIcon.Bullhorn, "Relay", ButtonRole.Success))
+        if (Components.ActionButton(FontAwesomeIcon.Bullhorn, HuntAlerts.C.JapaneseRelay ? "Relay（日本語）" : "Relay", ButtonRole.Success))
             RelayChannels.RelayMessage(entry, defaultChannel);
         if (ImGui.IsItemHovered())
             ImGui.SetTooltip($"Relay to {defaultDisplay}");

@@ -2,8 +2,9 @@
 <Project Sdk="Dalamud.NET.SDK/15.0.0">
     <PropertyGroup>
         <Version>1.4.1.7</Version>
+        <InformationalVersion>1.4.1.7-jp-relay.1</InformationalVersion>
         <Description>HuntAlerts</Description>
-        <PackageProjectUrl>https://github.com/goatcorp/HuntAlerts</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/MintakaSeiran/HuntAlerts-JP</PackageProjectUrl>
         <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
         <IsPackable>false</IsPackable>
         <TargetFramework>net10.0-windows7.0</TargetFramework>

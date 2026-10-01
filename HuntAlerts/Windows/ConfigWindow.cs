@@ -311,6 +311,12 @@ public class ConfigWindow : Window, IDisposable
         ImGui.Spacing();
         Components.SectionHeader("Notifications");
 
+        var japaneseRelay = HuntAlerts.C.JapaneseRelay;
+        if (ImGui.Checkbox("Relayを日本語で送信（AS Mob Plate形式）", ref japaneseRelay))
+        { HuntAlerts.C.JapaneseRelay = japaneseRelay; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("[S] モブ名 / エリア / 最寄り: エーテライト / DC: DC名 / サーバー: サーバー名 / POS: (X, Y)\nゲームの日本語名を使用します。取得できない名前は元の表記を使用します。\n座標が不明な場合はPOSを省略。地図リンクは下の設定で追加できます。");
+
         var relayNames = RelayChannels.All.Select(c => $"{c.Display}  {c.Command}").ToArray();
         var relayIdx   = RelayChannels.IndexOfCommand(HuntAlerts.C.DefaultRelayChannel);
         if (ImGui.Combo("Default Relay Channel", ref relayIdx, relayNames, relayNames.Length))

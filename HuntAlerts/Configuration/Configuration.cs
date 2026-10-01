@@ -78,6 +78,7 @@ namespace HuntAlerts
         public int SnoozeDefaultMinutes { get; set; } = 30;
         public string DefaultRelayChannel { get; set; } = "/p";
         public bool RelayFlagLink { get; set; } = true;
+        public bool JapaneseRelay { get; set; } = true;
         public bool WorldArrowEnabled { get; set; } = true;
         public bool ArrowChatPickup { get; set; } = true;
         public bool ArrowChatPickupShout { get; set; } = true;
