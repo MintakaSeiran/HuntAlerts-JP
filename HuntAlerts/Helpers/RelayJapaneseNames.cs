@@ -14,11 +14,13 @@ internal static class RelayJapaneseNames
     internal static (string Creature, string Zone, string Aetheryte) Resolve(HuntTrainMessage entry)
     {
         // IDがない過去の通知も、照合できた項目だけ翻訳する。
-        var creature = TryResolve(() => Creature(entry.creatureName), entry.creatureName);
+        var creature = ResolveCreature(entry.creatureName);
         var zone = TryResolve(() => Zone(entry.startTerritoryTypeId, entry.startZone), entry.startZone);
         var aetheryte = TryResolve(() => AetheryteName(entry.startLocationAetheryteId, entry.startLocation), entry.startLocation);
         return (creature, zone, aetheryte);
     }
+
+    internal static string ResolveCreature(string name) => TryResolve(() => Creature(name), name);
 
     private static string TryResolve(Func<string?> resolve, string fallback)
     {

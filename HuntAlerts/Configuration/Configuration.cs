@@ -43,6 +43,7 @@ namespace HuntAlerts
 
         public bool SuppressDuplicates { get; set; } = true;
         public bool ChatAlertsEnabled { get; set; } = true;
+        public bool JapaneseChatAlerts { get; set; } = true;
         public int TextColor { get; set; } = 57;
         public int SRankTextColor { get; set; } = 48;
         public int SRankKillTextColor { get; set; } = 16;

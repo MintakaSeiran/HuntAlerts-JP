@@ -52,7 +52,7 @@ This fork retains the upstream project's [AGPL-3.0-or-later](LICENSE) license de
 
 ## Download and Installation
 
-[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min/HuntAlerts-JP-1.4.1.7_jp_min.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min)
+[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.2/HuntAlerts-JP-1.4.1.7_jp_min.2.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.2)
 
 This is a prerelease: the build and automated checks pass, but in-game behavior has not been verified.
 
@@ -71,15 +71,15 @@ To install through Dalamud, add this URL to **Custom Plugin Repositories**:
 https://raw.githubusercontent.com/MintakaSeiran/HuntAlerts-JP/jp_relay/pluginmaster.json
 ```
 
-This fork retains the internal name `HuntAlerts`. Disable the original plugin and avoid installing or updating both variants simultaneously. Verify that the installed plugin's repository URL points to `MintakaSeiran/HuntAlerts-JP`. The same numeric version is used by upstream, so an existing upstream installation is not guaranteed to switch variants through an automatic update.
+This fork retains the internal name `HuntAlerts`. Disable the original plugin and avoid installing or updating both variants simultaneously. Verify that the installed plugin's repository URL points to `MintakaSeiran/HuntAlerts-JP`. Select this fork explicitly when switching repositories; installing an update does not itself verify in-game compatibility.
 
 For manual development installation, extract the entire ZIP into a development plugin folder and register `HuntAlerts.dll` in Dalamud's development plugin locations. Keep the manifest and all bundled dependencies beside the DLL. After loading, verify that the display name includes the Japanese relay suffix. To revert, disable this fork and enable the original plugin.
 
 ## Japanese Relay Changes
 
-Updated October 1, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
+Updated October 3, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
 
-InformationalVersion: `1.4.1.7_jp_min`. AssemblyVersion and the Dalamud manifest version remain `1.4.1.7`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
+InformationalVersion: `1.4.1.7_jp_min.2`. AssemblyVersion and the Dalamud manifest version are `1.4.1.8` so the installer can detect this update. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
 
 ### Relay Message Format
 
@@ -112,7 +112,19 @@ Supported relay destinations are Say, Yell, Shout, Party, Alliance, Free Company
 | Default Relay Channel / `DefaultRelayChannel` | `/p` | Destination used by the main Relay button. |
 | Add clickable map flag / `RelayFlagLink` | Enabled | Append a clickable location link when map information is available. Japanese messages also retain their POS text. |
 
-The only added configuration field is `JapaneseRelay=true`. It defaults to enabled even when absent from an existing configuration file. Configuration version 4, history version 2, the default relay channel, and IPC argument types remain unchanged. Updates to the original plugin do not include this fork's changes.
+The added configuration fields are `JapaneseRelay=true` and `JapaneseChatAlerts=true`. Both default to enabled when absent from an existing configuration file. Configuration version 4, history version 2, the default relay channel, and IPC argument types remain unchanged. Updates to the original plugin do not include this fork's changes.
+
+### Japanese Chat Notifications
+
+S-rank spawn notices, S-rank kill notices, and hunt train notices can now appear in Japanese in the player's chat log. Expansion labels, creature names, instance labels, and the clickable details prompt are localized. Creature names use the same Japanese game-data lookup as Relay, falling back to the original name if no translation is available. Server names retain their original spelling. Kill notices use the local time in 24-hour `HH:mm` format.
+
+The following is an English translation of the Japanese spawn message for documentation:
+
+```text
+An S-rank Aglaope from Shadowbringers has appeared on Zeromus! (Click for details)
+```
+
+Under **Chat**, the new Japanese-labeled checkbox means "Display notification logs in Japanese." It controls `JapaneseChatAlerts`, is enabled by default, and works independently of `JapaneseRelay`. Disabling it restores the original English chat messages. Chat channel selection, message colors, clickable details links, and Ctrl-click travel behavior remain unchanged. The stored notification data and IPC payloads retain their original names; this setting changes the chat text only. It does not translate arbitrary upstream service messages, debug logs, history cards, or the full notification window.
 
 Development and automated verification did not overwrite installed plugins or configuration files, or send in-game chat messages.
 
@@ -144,4 +156,4 @@ if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
 
 Output: `HuntAlerts/bin/Release/HuntAlerts/latest.zip`.
 
-The Release build succeeded with zero warnings and zero errors using SDK 10.0.401, MSBuild 18.9.11, and DLLs from Dalamud 15.0.3.5. All 32 game-independent checks passed. In-game Japanese sheet lookups, configuration reloads, FC/CWLS delivery, and clickable map links remain unverified.
+The Release build succeeded with zero warnings and zero errors using SDK 10.0.401, MSBuild 18.9.11, and DLLs from Dalamud 15.0.3.6. All 42 game-independent checks passed. In-game Japanese sheet lookups, configuration reloads, FC/CWLS delivery, and clickable map links remain unverified.

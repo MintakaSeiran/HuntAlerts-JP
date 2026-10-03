@@ -68,7 +68,7 @@ internal static partial class JapaneseRelayText
         if (clean.Length > 0) parts.Add(clean);
     }
 
-    private static string Expansion(string kind) => Clean(kind).ToLowerInvariant() switch
+    internal static string Expansion(string kind) => Clean(kind).ToLowerInvariant() switch
     {
         "arr" or "a realm reborn" => "新生",
         "hw" or "heavensward" => "蒼天",

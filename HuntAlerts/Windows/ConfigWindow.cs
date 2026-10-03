@@ -274,6 +274,12 @@ public class ConfigWindow : Window, IDisposable
         { HuntAlerts.C.ChatAlertsEnabled = chatAlerts; HuntAlerts.C.Save(); }
 
         ImGui.BeginDisabled(!chatAlerts);
+        var japaneseChat = HuntAlerts.C.JapaneseChatAlerts;
+        if (ImGui.Checkbox("通知ログを日本語で表示", ref japaneseChat))
+        { HuntAlerts.C.JapaneseChatAlerts = japaneseChat; HuntAlerts.C.Save(); }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("Sランクの出現・討伐、モブハントツアーのチャット通知を日本語にします。\nRelayの送信言語とは独立した設定です。");
+
         var useDalamud = HuntAlerts.C.UseDalamudChat;
         if (ImGui.Checkbox("Use Dalamud Default Chat", ref useDalamud))
         { HuntAlerts.C.UseDalamudChat = useDalamud; HuntAlerts.C.Save(); }

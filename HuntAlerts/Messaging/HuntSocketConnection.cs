@@ -422,7 +422,7 @@ public sealed class HuntSocketConnection : IDisposable
         Service.ToastWindow.Show(htMessage);
 
         if (config.ChatAlertsEnabled)
-            PrintChat(BuildLinkedLine(link, $"{hm.Kind} train starting on {hm.World}! (Click for info)", config.TextColor));
+            PrintChat(BuildLinkedLine(link, ChatAlertText.Train(config.JapaneseChatAlerts, hm.Kind, hm.World), config.TextColor));
 
         if (!Utilities.MuteAlertSoundNow)
         {
@@ -615,12 +615,12 @@ public sealed class HuntSocketConnection : IDisposable
 
             Service.ToastWindow.Show(htMessage);
 
-            var label = instance > 1
-                ? $"{hm.Kind} S Rank {creatureName} (i{instance}) spawned on {hm.World}! (Click for info)"
-                : $"{hm.Kind} S Rank {creatureName} spawned on {hm.World}! (Click for info)";
-
             if (config.ChatAlertsEnabled)
+            {
+                var displayCreature = config.JapaneseChatAlerts ? RelayJapaneseNames.ResolveCreature(creatureName) : creatureName;
+                var label = ChatAlertText.Spawn(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, instance);
                 PrintChat(BuildLinkedLine(link, label, config.SRankTextColor));
+            }
 
             if (!Utilities.MuteAlertSoundNow)
             {
@@ -642,7 +642,11 @@ public sealed class HuntSocketConnection : IDisposable
                 PluginLog.Verbose("S Rank kill notification hidden: in duty.");
                 return;
             }
-            var label = $"{hm.Kind} S Rank {creatureName} on {hm.World} was killed at {HuntMessageFormatting.ConvertTime(deathTime)}.";
+            var displayCreature = config.JapaneseChatAlerts ? RelayJapaneseNames.ResolveCreature(creatureName) : creatureName;
+            var deathTimeText = config.JapaneseChatAlerts
+                ? DateTimeOffset.FromUnixTimeSeconds(deathTime).ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture)
+                : HuntMessageFormatting.ConvertTime(deathTime);
+            var label = ChatAlertText.Kill(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, deathTimeText);
             var b = new SeStringBuilder();
             if (config.SRankKillTextColor != 0) b.AddUiForeground((ushort)config.SRankKillTextColor);
             b.AddText(label);
