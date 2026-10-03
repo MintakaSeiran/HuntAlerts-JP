@@ -3,7 +3,7 @@
     "Author": "Asuna / HuntsFFXIV; Japanese Relay: MintakaSeiran",
     "Name": "HuntAlerts (日本語Relay)",
     "InternalName": "HuntAlerts",
-    "AssemblyVersion": "1.4.1.8",
+    "AssemblyVersion": "1.4.1.9",
     "Description": "HuntAlertsの日本語通知・Relayフォーク。出現・討伐・ツアーのログを日本語表示し、RelayではDC・サーバー・POSを共有します。実機未確認のプレビュー版です。",
     "Punchline": "日本語でモブハント通知を共有",
     "ApplicableVersion": "any",
@@ -16,9 +16,9 @@
       "japanese"
     ],
     "IconUrl": "https://projects.gamba.pro/Asuna/releases/-/raw/main/HuntAlerts/FFXIV_Hunts_logo.png",
-    "LastUpdate": 1791002301,
-    "DownloadLinkInstall": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.2/HuntAlerts-JP-1.4.1.7_jp_min.2.zip",
-    "DownloadLinkUpdate": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.2/HuntAlerts-JP-1.4.1.7_jp_min.2.zip",
-    "DownloadLinkTesting": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.2/HuntAlerts-JP-1.4.1.7_jp_min.2.zip"
+    "LastUpdate": 1791015606,
+    "DownloadLinkInstall": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.3/HuntAlerts-JP-1.4.1.7_jp_min.3.zip",
+    "DownloadLinkUpdate": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.3/HuntAlerts-JP-1.4.1.7_jp_min.3.zip",
+    "DownloadLinkTesting": "https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.3/HuntAlerts-JP-1.4.1.7_jp_min.3.zip"
   }
 ]

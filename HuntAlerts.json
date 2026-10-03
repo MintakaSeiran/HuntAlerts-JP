@@ -2,7 +2,7 @@
   "Author": "Asuna / HuntsFFXIV; Japanese Relay: MintakaSeiran",
   "Name": "HuntAlerts (日本語Relay)",
   "InternalName": "HuntAlerts",
-  "AssemblyVersion": "1.4.1.8",
+  "AssemblyVersion": "1.4.1.9",
   "Description": "Notifies you when hunt trains are starting soon\nSupports NA/EU/OCE/JP",
   "ApplicableVersion": "any",
   "RepoUrl": "https://github.com/MintakaSeiran/HuntAlerts-JP",

@@ -422,7 +422,7 @@ public sealed class HuntSocketConnection : IDisposable
         Service.ToastWindow.Show(htMessage);
 
         if (config.ChatAlertsEnabled)
-            PrintChat(BuildLinkedLine(link, ChatAlertText.Train(config.JapaneseChatAlerts, hm.Kind, hm.World), config.TextColor));
+            PrintChat(BuildLinkedLine(link, ChatAlertText.Train(config.JapaneseChatAlerts, hm.Kind, hm.World, huntDc), config.TextColor));
 
         if (!Utilities.MuteAlertSoundNow)
         {
@@ -618,7 +618,7 @@ public sealed class HuntSocketConnection : IDisposable
             if (config.ChatAlertsEnabled)
             {
                 var displayCreature = config.JapaneseChatAlerts ? RelayJapaneseNames.ResolveCreature(creatureName) : creatureName;
-                var label = ChatAlertText.Spawn(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, instance);
+                var label = ChatAlertText.Spawn(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, instance, huntDc);
                 PrintChat(BuildLinkedLine(link, label, config.SRankTextColor));
             }
 
@@ -646,7 +646,7 @@ public sealed class HuntSocketConnection : IDisposable
             var deathTimeText = config.JapaneseChatAlerts
                 ? DateTimeOffset.FromUnixTimeSeconds(deathTime).ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture)
                 : HuntMessageFormatting.ConvertTime(deathTime);
-            var label = ChatAlertText.Kill(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, deathTimeText);
+            var label = ChatAlertText.Kill(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, deathTimeText, huntDc);
             var b = new SeStringBuilder();
             if (config.SRankKillTextColor != 0) b.AddUiForeground((ushort)config.SRankKillTextColor);
             b.AddText(label);

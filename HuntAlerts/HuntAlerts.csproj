@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Dalamud.NET.SDK/15.0.0">
     <PropertyGroup>
-        <Version>1.4.1.8</Version>
-        <InformationalVersion>1.4.1.7_jp_min.2</InformationalVersion>
+        <Version>1.4.1.9</Version>
+        <InformationalVersion>1.4.1.7_jp_min.3</InformationalVersion>
         <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
         <Description>HuntAlerts</Description>
         <PackageProjectUrl>https://github.com/MintakaSeiran/HuntAlerts-JP</PackageProjectUrl>

@@ -76,4 +76,12 @@ Check(ChatAlertText.Kill(true, "SHB", "アグラオペ", "Zeromus", "21:34") == 
 Check(ChatAlertText.Kill(false, "SHB", "Aglaope", "Zeromus", "09:34 PM") == "SHB S Rank Aglaope on Zeromus was killed at 09:34 PM.", "English kill preserved");
 Check(ChatAlertText.Train(true, "Shadowbringers, Endwalker", "Zeromus") == "Zeromusで漆黒・暁月 モブハントツアーが開始予定です！（クリックで詳細）", "Multiple expansion train");
 Check(ChatAlertText.Train(false, "Dawntrail", "Zeromus") == "Dawntrail train starting on Zeromus! (Click for info)", "English train preserved");
+foreach (var japanese in new[] { true, false })
+{
+    Check(ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 2, " Meteor ") == "[DC: Meteor] " + ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 2), "Spawn DC prefix preserves message and trims whitespace");
+    Check(ChatAlertText.Kill(japanese, "SHB", "Aglaope", "Zeromus", "21:34", "Meteor") == "[DC: Meteor] " + ChatAlertText.Kill(japanese, "SHB", "Aglaope", "Zeromus", "21:34"), "Kill DC prefix");
+    Check(ChatAlertText.Train(japanese, "SHB", "Zeromus", "Meteor") == "[DC: Meteor] " + ChatAlertText.Train(japanese, "SHB", "Zeromus"), "Train DC prefix");
+    foreach (var dc in new string?[] { null, "", " ", "unknown", "invalid" })
+        Check(ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 1, dc) == ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 1), "Missing DC omitted");
+}
 Console.WriteLine($"Passed {checks} relay and chat alert checks.");
