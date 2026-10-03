@@ -1,0 +1,23 @@
+{
+  "Author": "Asuna / HuntsFFXIV; Japanese Relay: MintakaSeiran",
+  "Name": "HuntAlerts (日本語Relay)",
+  "InternalName": "HuntAlerts",
+  "AssemblyVersion": "1.4.1.7",
+  "Description": "Notifies you when hunt trains are starting soon\nSupports NA/EU/OCE/JP",
+  "ApplicableVersion": "any",
+  "RepoUrl": "https://github.com/MintakaSeiran/HuntAlerts-JP",
+  "Tags": [
+    "hunt",
+    "train",
+    "boat",
+    "rank"
+  ],
+  "DalamudApiLevel": 15,
+  "LoadRequiredState": 0,
+  "LoadSync": false,
+  "CanUnloadAsync": false,
+  "LoadPriority": 0,
+  "IconUrl": "https://projects.gamba.pro/Asuna/releases/-/raw/main/HuntAlerts/FFXIV_Hunts_logo.png",
+  "Punchline": "Notifies you when hunt trains are starting soon\nSupports NA/EU/OCE/JP",
+  "AcceptsFeedback": true
+}

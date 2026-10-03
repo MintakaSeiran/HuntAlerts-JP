@@ -2,6 +2,48 @@
 
 A Japanese relay fork of [HuntAlerts](https://github.com/huntsffxiv/huntalerts). Original authors: Asuna / HuntsFFXIV. Japanese relay changes: MintakaSeiran.
 
+This README describes the implemented features in English. Translations of Japanese interface labels and relay examples are provided for documentation; the Japanese relay output in the plugin remains Japanese.
+
+## Implemented Features
+
+### Hunt Alerts and History
+
+- Receive hunt train and S-rank notifications from the upstream service, with optional S-rank kill notifications. Available worlds are grouped into JP, NA, EU, and OCE regions.
+- Configure train and S-rank expansion groups independently. Train groups include Centurio, Shadowbringers, Endwalker, and Dawntrail.
+- Select all configured worlds, the current datacenter, the current world, or the home world independently for trains and S ranks. World selectors include a search field and datacenter grouping.
+- Display alerts in chat, in the notification window, and optionally in a toast banner. Chat settings include the output channel and separate colors for trains, S-rank spawns, and kills.
+- Keep up to 50 cached alerts in persistent history. Clearing the visible history preserves existing chat links until their cache slots are overwritten.
+- Optionally suppress duplicate train messages.
+
+### Notification Controls
+
+- Snooze incoming alerts for 5, 15, 30, 60, or 120 minutes, and wake them early from settings or the history window. Snoozed messages are skipped before they enter history.
+- Optionally hide alert popups, chat messages, and sounds while in instanced content; accepted train and S-rank spawn alerts still enter history.
+- Optionally mute alert sounds during cutscenes while retaining the popup and chat message.
+- Choose game sound effects or import custom MP3 sounds separately for trains and S ranks, with adjustable custom sound volume.
+- Enable a toast banner with a duration of 3, 5, 8, or 12 seconds. Choose no animation, fade, slide, or slide plus fade; preview, reposition, or reset the banner in settings.
+
+### Alert Actions and Navigation
+
+- Open an alert's location with **Flag on Map** and open the game's **Party Finder**. The Party Finder action opens the interface; it does not generate an AS Mob Plate recruitment listing.
+- Use **Nav** to target the on-screen navigation arrow when the alert has a territory and coordinates. The draggable arrow points toward the selected location while the player is in its zone.
+- Optionally retarget the arrow from map links in Shout, Yell, and Party/Cross-world Party chat. Each channel can be enabled separately, and the active waypoint can be cleared.
+- Enable optional Lifestream integration for teleport and world-change requests, with optional map flagging on arrival. The notification window offers the travel action when the alert's target region matches the player's region.
+- Enable Ctrl-click teleport requests from alert chat links when Lifestream is available. Integration setting changes apply to subsequent hunt messages.
+- Share an alert through Relay using Japanese or the original English formatting. The default channel and the one-time channel picker use the same selected format.
+
+### Commands and Diagnostics
+
+| Command | Implemented behavior |
+| --- | --- |
+| `/huntalerts` | Open recent hunt history. |
+| `/huntalerts settings` or `/huntalerts s` | Open settings. |
+| `/huntalerts debug` or `/huntalerts d` | Open the debug view for simulated hunt messages. |
+
+Connection diagnostics show the current state, reconnect attempts, the last error, and recent activity, with a manual reconnect action. The debug view can simulate train or S-rank messages with a world, expansion, location, coordinates, and optional creature information; normal filtering still applies.
+
+The plugin also exposes upstream IPC events for received hunt messages and typed hunt alerts, plus queries for Lifestream integration and map-on-arrival settings. This fork retains those event payloads and query signatures.
+
 This repository was forked from the original GitHub repository and incorporates the history of the [current upstream on GitLab](https://projects.gamba.pro/Asuna/huntalerts). The `main` branch contains the upstream 1.4.1.7 baseline. The `jp_relay` branch contains this fork's changes. See the [changes compared with the upstream baseline](https://github.com/MintakaSeiran/HuntAlerts-JP/compare/main...jp_relay).
 
 For this fork, use [HuntAlerts-JP Issues](https://github.com/MintakaSeiran/HuntAlerts-JP/issues). The original plugin repository is `https://puni.sh/api/repository/asuna`; its support channel is `asuna-plugins` in the [Puni.sh Discord](https://discord.gg/punishxiv).
@@ -13,6 +55,15 @@ This fork retains the upstream project's [AGPL-3.0-or-later](LICENSE) license de
 [Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min/HuntAlerts-JP-1.4.1.7_jp_min.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min)
 
 This is a prerelease: the build and automated checks pass, but in-game behavior has not been verified.
+
+### JSON Files
+
+| File | Purpose |
+| --- | --- |
+| [pluginmaster.json](pluginmaster.json) | Custom repository manifest containing the plugin entry and release download URLs. Use its raw URL in Dalamud's Custom Plugin Repositories. |
+| [HuntAlerts.json](HuntAlerts.json) | Individual plugin manifest copied from the published build, including the internal name, numeric assembly version, and Dalamud API level. Keep this file beside the DLL for manual installation. |
+
+Both JSON files are also available as release assets. The source template at `HuntAlerts/HuntAlerts.json` is used during building; the root-level `HuntAlerts.json` is the generated distribution manifest.
 
 To install through Dalamud, add this URL to **Custom Plugin Repositories**:
 
@@ -52,6 +103,14 @@ Messages follow the layout used by AS Mob Plate recruitment comments. This examp
 1. Open `/huntalerts settings` and find the Japanese relay checkbox under Notifications. Its Japanese label means "Send Relay in Japanese (AS Mob Plate format)." It is enabled by default. Disable it to restore the original English format.
 2. Use the alert's Relay button to share through the configured channel.
 3. Select `Echo (test)` from the adjacent arrow menu to check the actual message in your own chat before using a shared channel.
+
+Supported relay destinations are Say, Yell, Shout, Party, Alliance, Free Company, Linkshells 1-8, Cross-world Linkshells 1-8, and Echo. The default is Party. Choosing a destination from the arrow menu sends only that relay to it and does not replace the saved default.
+
+| Relay setting | Default | Behavior |
+| --- | --- | --- |
+| Japanese relay / `JapaneseRelay` | Enabled | Use Japanese game names and the AS Mob Plate-style format described above. Disable to use the original English formatter. |
+| Default Relay Channel / `DefaultRelayChannel` | `/p` | Destination used by the main Relay button. |
+| Add clickable map flag / `RelayFlagLink` | Enabled | Append a clickable location link when map information is available. Japanese messages also retain their POS text. |
 
 The only added configuration field is `JapaneseRelay=true`. It defaults to enabled even when absent from an existing configuration file. Configuration version 4, history version 2, the default relay channel, and IPC argument types remain unchanged. Updates to the original plugin do not include this fork's changes.
 
