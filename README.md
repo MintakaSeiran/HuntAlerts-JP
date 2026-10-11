@@ -6,9 +6,9 @@ This README describes the implemented features in English. Translations of Japan
 
 ## Implemented Features
 
-### Local Development Update (1.4.1.7_jp_min.4 / 1.4.1.10)
+### History Update (1.4.1.7_jp_min.4 / 1.4.1.10)
 
-This update is local and not published. The download links below still point to the last published build.
+Released as a prerelease at the maintainer's request. In-game behavior remains unverified.
 
 - History cards and their detail header show **SS RANK** only for confirmed SS boss names. Names are loaded in EN/JP/DE/FR from BNpcName IDs `0x22D3`, `0x2977`, and `0x345E`. Normal S ranks, minions, missing names, and unrecognized names are not promoted. Existing cached entries use the same display-time lookup without a history migration. Chat, relay, toast text and IPC schemas remain unchanged.
 - Received hunt events are no longer discarded just because the player is logged out during datacenter travel. The plugin holds the latest 50 pending events in memory and processes up to five per framework update after a valid player/world/DC context returns. Overflow drops the oldest pending event and writes a warning.
@@ -64,7 +64,7 @@ This fork retains the upstream project's [AGPL-3.0-or-later](LICENSE) license de
 
 ## Download and Installation
 
-[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.3/HuntAlerts-JP-1.4.1.7_jp_min.3.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.3)
+[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.4/HuntAlerts-JP-1.4.1.7_jp_min.4.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.4)
 
 This is a prerelease: the build and automated checks pass, but in-game behavior has not been verified.
 
@@ -89,9 +89,9 @@ For manual development installation, extract the entire ZIP into a development p
 
 ## Japanese Relay Changes
 
-Updated October 3, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
+Updated October 12, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
 
-InformationalVersion: `1.4.1.7_jp_min.3`. AssemblyVersion and the Dalamud manifest version are `1.4.1.9` so the installer can detect this update. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
+InformationalVersion: `1.4.1.7_jp_min.4`. AssemblyVersion and the Dalamud manifest version are `1.4.1.10` so the installer can detect this update. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
 
 ### Relay Message Format
 
@@ -168,4 +168,4 @@ if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
 
 Output: `HuntAlerts/bin/Release/HuntAlerts/latest.zip`.
 
-The Release build succeeded with zero warnings and zero errors using SDK 10.0.401, MSBuild 18.9.11, and DLLs from Dalamud 15.0.3.6. All 58 game-independent checks passed. In-game Japanese sheet lookups, configuration reloads, FC/CWLS delivery, and clickable map links remain unverified.
+The Release build and packaging succeeded with zero errors using SDK 10.0.401, MSBuild 18.9.11, and DLLs from Dalamud 15.0.3.6. One NU1900 warning remains because NuGet vulnerability information could not be retrieved; a completed vulnerability audit is not claimed. All 181 game-independent checks passed. In-game SS labels, datacenter-travel reception, Japanese sheet lookups, configuration reloads, FC/CWLS delivery, and clickable map links remain unverified. The published ZIP is the unchanged build artifact, SHA-256 `ad006c1c121b2c9bb98d5b86b53036bbfb04832ffe1658ce2558f8916b8588c2`.
