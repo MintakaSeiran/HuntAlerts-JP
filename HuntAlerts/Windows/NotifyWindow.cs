@@ -118,7 +118,7 @@ public class NotifyWindow : Window
     {
         var (badgeText, style, title) = isTrain
             ? ("TRAIN",  BadgeStyle.Train, $"{entry.huntKind} train")
-            : ("S RANK", BadgeStyle.SRank, $"{entry.huntKind} S Rank");
+            : ($"{HuntRankDisplay.Rank(entry)} RANK", BadgeStyle.SRank, $"{entry.huntKind} {HuntRankDisplay.Rank(entry)} Rank");
 
         Components.Badge(badgeText, style);
         ImGui.SameLine();

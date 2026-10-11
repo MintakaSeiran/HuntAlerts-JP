@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Dalamud.Game;
+using Dalamud.Plugin.Services;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ECommons;
@@ -33,6 +34,9 @@ public sealed class HuntSocketConnection : IDisposable
     private SocketIOClient.SocketIO? socket;
     private CancellationTokenSource? cancellationTokenSource;
     private readonly ConcurrentDictionary<(string Kind, string World), DateTime> recentMessagesCache = [];
+    private readonly DeferredHuntInbox<HuntMessage> inbox = new();
+    private volatile bool playerAvailable;
+    private volatile bool disposed;
 
     public ConnectionState SocketState { get; private set; } = ConnectionState.Unknown;
     public DateTime? LastStateChangeUtc { get; private set; }
@@ -49,6 +53,7 @@ public sealed class HuntSocketConnection : IDisposable
     public HuntSocketConnection(string? serverUri = null)
     {
         ServerUri = serverUri ?? DefaultServerUri;
+        Svc.Framework.Update += OnFrameworkUpdate;
         Connect();
     }
 
@@ -167,6 +172,7 @@ public sealed class HuntSocketConnection : IDisposable
 
     public Task ProcessMessage(string messageString)
     {
+        if (disposed) return Task.CompletedTask;
         try
         {
             if (messageString.StartsWith("Alert:"))
@@ -174,29 +180,17 @@ public sealed class HuntSocketConnection : IDisposable
                 var alertMessage = messageString["Alert:".Length..].Trim();
                 var formatted = "HuntAlerts Admin Broadcast\n" + alertMessage;
                 var message = new SeStringBuilder().AddUiForeground(16).AddText(formatted).AddUiForegroundOff().Build();
-                PrintChat(message);
+                _ = new TickScheduler(() =>
+                {
+                    if (!disposed && SnapshotPlayer().CurrentWorld != null) PrintChat(message);
+                });
                 return Task.CompletedTask;
             }
 
             var huntMessage = JsonConvert.DeserializeObject<HuntMessage>(messageString);
             if (huntMessage == null) return Task.CompletedTask;
 
-            if (!Svc.ClientState.IsLoggedIn) return Task.CompletedTask;
-
-            _ = new TickScheduler(() =>
-            {
-                try
-                {
-                    if (huntMessage.Type == "new_hunt")
-                        HandleTrainEvent(huntMessage);
-                    else if (huntMessage.Type == "srank")
-                        HandleSRankEvent(huntMessage);
-                }
-                catch (Exception e)
-                {
-                    e.Log();
-                }
-            });
+            ScheduleMessage(huntMessage);
         }
         catch (JsonException ex)
         {
@@ -207,22 +201,48 @@ public sealed class HuntSocketConnection : IDisposable
     }
 
     public void SimulateHuntMessage(HuntMessage hm)
+        => ScheduleMessage(hm);
+
+    private void ScheduleMessage(HuntMessage hm)
     {
+        if (disposed || hm.Type is not ("new_hunt" or "srank")) return;
+        var receivedWithoutPlayer = !playerAvailable;
+        var receivedAtUtc = DateTime.UtcNow;
         _ = new TickScheduler(() =>
+        {
+            if (disposed || Service.Snooze.IsSnoozed) return;
+            var historyOnly = receivedWithoutPlayer || SnapshotPlayer().CurrentWorld == null;
+            if (inbox.Enqueue(hm, historyOnly, receivedAtUtc))
+                PluginLog.Warning("HuntAlerts: pending history exceeded 50 messages; oldest pending event discarded.");
+        });
+    }
+
+    private void OnFrameworkUpdate(IFramework _)
+    {
+        if (disposed) return;
+        var wasAvailable = playerAvailable;
+        playerAvailable = SnapshotPlayer().CurrentWorld != null;
+        if (!playerAvailable)
+        {
+            // Also silence messages queued just before logout or travel began.
+            if (wasAvailable) inbox.MarkHistoryOnly();
+            return;
+        }
+        for (var i = 0; i < 5 && inbox.TryTake(playerAvailable, out var pending); i++)
         {
             try
             {
-                if (hm.Type == "new_hunt") HandleTrainEvent(hm);
-                else if (hm.Type == "srank") HandleSRankEvent(hm);
+                if (pending.Message.Type == "new_hunt") HandleTrainEvent(pending.Message, pending.HistoryOnly, pending.ReceivedAtUtc);
+                else if (pending.Message.Type == "srank") HandleSRankEvent(pending.Message, pending.HistoryOnly);
             }
             catch (Exception e)
             {
                 e.Log();
             }
-        });
+        }
     }
 
-    private void HandleTrainEvent(HuntMessage hm)
+    private void HandleTrainEvent(HuntMessage hm, bool historyOnly, DateTime receivedAtUtc)
     {
         var config = HuntAlerts.C;
 
@@ -237,12 +257,11 @@ public sealed class HuntSocketConnection : IDisposable
         var dedupeKey = (hm.Kind, hm.World);
         if (config.SuppressDuplicates &&
             recentMessagesCache.TryGetValue(dedupeKey, out var last) &&
-            DateTime.Now - last < TimeSpan.FromMinutes(2))
+            receivedAtUtc - last < TimeSpan.FromMinutes(2))
         {
             PluginLog.Verbose("Train suppressed by dedup window.");
             return;
         }
-        recentMessagesCache[dedupeKey] = DateTime.Now;
 
         if (!HuntAlertFilter.IsTrainGroupEnabled(config, hm.Kind))
         {
@@ -410,6 +429,8 @@ public sealed class HuntSocketConnection : IDisposable
             0);
 
         var link = Service.MessageCacheManager.AddMessage(htMessage);
+        recentMessagesCache[dedupeKey] = receivedAtUtc;
+        if (historyOnly) return;
         Service.IPCManager.OnHuntTrainMessageReceived(htMessage);
         Service.IPCManager.OnHuntAlertMessageReceived(typedAlert);
 
@@ -433,7 +454,7 @@ public sealed class HuntSocketConnection : IDisposable
         }
     }
 
-    private void HandleSRankEvent(HuntMessage hm)
+    private void HandleSRankEvent(HuntMessage hm, bool historyOnly = false)
     {
         var config = HuntAlerts.C;
 
@@ -602,6 +623,7 @@ public sealed class HuntSocketConnection : IDisposable
                 Svc.Data.GetExcelSheet<BNpcName>(ClientLanguage.English).FirstOrNull(r => r.Singular.ExtractText().Equals(creatureName.Trim(), StringComparison.OrdinalIgnoreCase))?.RowId);
 
             var link = Service.MessageCacheManager.AddMessage(htMessage);
+            if (historyOnly) return;
             Service.IPCManager.OnHuntTrainMessageReceived(htMessage);
             Service.IPCManager.OnHuntAlertMessageReceived(typedAlert);
 
@@ -632,6 +654,7 @@ public sealed class HuntSocketConnection : IDisposable
         }
         else
         {
+            if (historyOnly) return;
             if (!config.SRankKillNotifications || !config.ChatAlertsEnabled)
             {
                 PluginLog.Verbose("S Rank kill notification suppressed by setting.");
@@ -677,7 +700,6 @@ public sealed class HuntSocketConnection : IDisposable
         if (cw == null || hw == null || cdc == null || cr == null)
             return new PlayerContextSnapshot(null, null);
 
-        PluginLog.Verbose($"Player ctx: world={cw.Value.Name} home={hw.Value.Name} dc={cdc.Value.Name} region={cr.Value.Name}");
         return new PlayerContextSnapshot(cw, hw);
     }
 
@@ -724,6 +746,9 @@ public sealed class HuntSocketConnection : IDisposable
 
     public void Dispose()
     {
+        disposed = true;
+        Svc.Framework.Update -= OnFrameworkUpdate;
+        inbox.Clear();
         try
         {
             cancellationTokenSource?.Cancel();

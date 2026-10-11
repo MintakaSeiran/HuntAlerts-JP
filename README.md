@@ -6,6 +6,18 @@ This README describes the implemented features in English. Translations of Japan
 
 ## Implemented Features
 
+### Local Development Update (1.4.1.7_jp_min.4 / 1.4.1.10)
+
+This update is local and not published. The download links below still point to the last published build.
+
+- History cards and their detail header show **SS RANK** only for confirmed SS boss names. Names are loaded in EN/JP/DE/FR from BNpcName IDs `0x22D3`, `0x2977`, and `0x345E`. Normal S ranks, minions, missing names, and unrecognized names are not promoted. Existing cached entries use the same display-time lookup without a history migration. Chat, relay, toast text and IPC schemas remain unchanged.
+- Received hunt events are no longer discarded just because the player is logged out during datacenter travel. The plugin holds the latest 50 pending events in memory and processes up to five per framework update after a valid player/world/DC context returns. Overflow drops the oldest pending event and writes a warning.
+- Deferred events are filtered using the **post-login** world/DC and the current settings. Current-DC/current-world modes do not assume the previous DC or guess the destination. All-configured and home-world modes retain their usual meaning. Snoozed events are skipped; snooze is checked again during processing.
+- Accepted deferred train/spawn events enter persistent history silently, without chat, sound, popup or IPC replay. Live events retain their normal effects. Original posted times are preserved; train deduplication uses original receive times, not the replay time. Kill messages remain chat-only and are not replayed or added to history after travel.
+- This requires the game, plugin and Socket.IO connection to remain running. It cannot recover events never received during a network disconnect, and pending events do not survive plugin unload or game restart. It is not a server history/backfill API.
+
+Japanese specification and manual test steps: [History update](docs/HISTORY_UPDATE.md).
+
 ### Hunt Alerts and History
 
 - Receive hunt train and S-rank notifications from the upstream service, with optional S-rank kill notifications. Available worlds are grouped into JP, NA, EU, and OCE regions.

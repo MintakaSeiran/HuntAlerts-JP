@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using HuntAlerts.Helpers;
+using HuntAlerts.Messaging;
 
 var checks = 0;
 void Check(bool success, string label)
@@ -84,4 +85,33 @@ foreach (var japanese in new[] { true, false })
     foreach (var dc in new string?[] { null, "", " ", "unknown", "invalid" })
         Check(ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 1, dc) == ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 1), "Missing DC omitted");
 }
-Console.WriteLine($"Passed {checks} relay and chat alert checks.");
+var rankNames = new HuntRankNames();
+rankNames.Add("Forgiven Rebellion");
+rankNames.Add("フォーギヴン・リベリオン");
+Check(HuntRankNames.SsNameIds.SequenceEqual(new uint[] { 0x22D3, 0x2977, 0x345E }), "Only verified SS boss IDs, not minions");
+foreach (var name in new[] { "Forgiven Rebellion", " forgiven rebellion ", "Forgiven Rebellion [JP]", "Forgiven Rebellion［JP］", "フォーギヴン・リベリオン" })
+    Check(rankNames.Rank("srank", name) == "SS", "Exact SS name including upstream localized suffix: " + name);
+foreach (var name in new string?[] { null, "", "Aglaope", "Forgiven Gossip", "Forgiven Rebellion minion", "SS", "SS spawned" })
+    Check(rankNames.Rank("srank", name) == "S", "Unknown, ordinary and minion names are not promoted: " + name);
+Check(rankNames.Rank("new_hunt", "Forgiven Rebellion") == "S", "Train must not be classified SS");
+var inbox = new DeferredHuntInbox<int>();
+var received = new DateTime(2026, 10, 12, 0, 0, 0, DateTimeKind.Utc);
+Check(!inbox.Enqueue(1, true, received), "Offline receipt enqueued");
+Check(!inbox.TryTake(false, out _) && inbox.Count == 1, "No player: preserve message, do not filter using empty context");
+Check(inbox.TryTake(true, out var pending) && pending.Message == 1 && pending.HistoryOnly, "Return: offline receipt remains history-only");
+Check(pending.ReceivedAtUtc == received, "Dedupe uses original receive time, not replay time");
+Check(!inbox.TryTake(true, out _), "No replay of same queued message");
+inbox.Enqueue(2, false, received);
+inbox.MarkHistoryOnly();
+Check(inbox.TryTake(true, out pending) && pending.HistoryOnly, "Logout silences previously queued live notification");
+inbox.Enqueue(3, false, received);
+Check(inbox.TryTake(true, out pending) && !pending.HistoryOnly, "New live notification still permits original effects");
+for (var i = 0; i < DeferredHuntInbox<int>.Capacity; i++)
+    Check(!inbox.Enqueue(i, true, received.AddMinutes(i)), "Within queue capacity");
+Check(inbox.Enqueue(50, true, received.AddMinutes(50)) && inbox.Count == 50, "Bounded to latest 50, reports overflow");
+for (var i = 1; i <= 50; i++)
+    Check(inbox.TryTake(true, out pending) && pending.Message == i && pending.ReceivedAtUtc == received.AddMinutes(i), "FIFO and original timestamps survive travel");
+inbox.Enqueue(51, true, received);
+inbox.Clear();
+Check(inbox.Count == 0 && !inbox.TryTake(true, out _), "Unload clears pending entries");
+Console.WriteLine($"Passed {checks} relay, chat, rank and deferred-history checks.");

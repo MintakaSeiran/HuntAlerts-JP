@@ -158,7 +158,7 @@ public class HuntListWindow : Window
             if (msg == null) continue;
 
             var isTrain    = msg.huntType == "new_hunt";
-            var badgeText  = isTrain ? "TRAIN" : "S RANK";
+            var badgeText  = isTrain ? "TRAIN" : $"{HuntRankDisplay.Rank(msg)} RANK";
             var badgeStyle = isTrain ? BadgeStyle.Train : BadgeStyle.SRank;
             var accent     = isTrain ? Theme.TrainBorder : Theme.SRankBorder;
             var kindLabel  = NormalizeKindLabel(msg.huntKind);
