@@ -13,12 +13,12 @@ void Check(bool success, string label)
 HuntTrainMessage Entry() => new("", "srank", "ARR", "Yojimbo", "OtherWorld", "JP", "JP", "", 0,
     "Horizon", 0, "Western Thanalan", 1, "26.8, 16.9", false, false, "Zona Seeker",
     mapLocationX: 26.8f, mapLocationY: 16.9f);
-string Build(HuntTrainMessage entry, bool flag = false, string dc = "Meteor") =>
-    JapaneseRelayText.Build(entry, flag, "ゾーナ・シーカー", "西ザナラーン", "ホライズン", dc);
+string Build(HuntTrainMessage entry, bool flag = false) =>
+    JapaneseRelayText.Build(entry, flag, "ゾーナ・シーカー", "西ザナラーン", "ホライズン");
 
 var entry = Entry();
-var expected = "[S] ゾーナ・シーカー / 西ザナラーン / 最寄り: ホライズン / DC: Meteor / サーバー: Yojimbo / POS: (26.8, 16.9)";
-Check(Build(entry) == expected, "Requested AS Mob Plate format, target DC/world and POS");
+var expected = "[S] ゾーナ・シーカー / 西ザナラーン / 最寄り: ホライズン / サーバー: Yojimbo / POS: (26.8, 16.9)";
+Check(Build(entry) == expected, "Requested format, world and POS without DC");
 Check(Build(entry, true) == expected + " / <flag>", "Flag must not replace POS");
 Check(!Build(entry).Contains("OtherWorld"), "Current world must not leak into target world");
 Check(!Build(entry).Contains("ET"), "No invented start ET");
@@ -26,14 +26,14 @@ Check(!Build(entry).Contains("インスタンス"), "Single-instance formatting 
 entry.instance = 3;
 Check(Build(entry).Contains(" / インスタンス3 / POS:"), "Multiple-instance information preserved");
 entry = Entry();
-Check(!Build(entry, dc: "").Contains("DC:"), "Unknown DC omitted");
-Check(Build(entry, dc: "").Contains("サーバー: Yojimbo"), "Server survives unknown DC");
+Check(!Build(entry).Contains("DC:"), "DC omitted");
+Check(Build(entry).Contains("サーバー: Yojimbo"), "Server retained");
 entry.huntWorld = "unknown";
-Check(!Build(entry, dc: "").Contains("サーバー:"), "Unknown server omitted");
+Check(!Build(entry).Contains("サーバー:"), "Unknown server omitted");
 entry = Entry();
-Check(JapaneseRelayText.Build(entry, false, "Unmapped creature", "Unmapped zone", "Unmapped aetheryte", "Meteor")
+Check(JapaneseRelayText.Build(entry, false, "Unmapped creature", "Unmapped zone", "Unmapped aetheryte")
     .StartsWith("[S] Unmapped creature / Unmapped zone / 最寄り: Unmapped aetheryte"), "Original names retained if untranslated");
-Check(!JapaneseRelayText.Build(entry, false, "invalid", "unknown", " ", "").Contains("最寄り:"), "Missing names omitted");
+Check(!JapaneseRelayText.Build(entry, false, "invalid", "unknown", " ").Contains("最寄り:"), "Missing names omitted");
 entry.huntType = "new_hunt";
 entry.huntKind = "Dawntrail";
 Check(Build(entry).StartsWith("[モブハントツアー] 黄金 /"), "Train is not mislabeled S rank");
@@ -79,11 +79,9 @@ Check(ChatAlertText.Train(true, "Shadowbringers, Endwalker", "Zeromus") == "Zero
 Check(ChatAlertText.Train(false, "Dawntrail", "Zeromus") == "Dawntrail train starting on Zeromus! (Click for info)", "English train preserved");
 foreach (var japanese in new[] { true, false })
 {
-    Check(ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 2, " Meteor ") == "[DC: Meteor] " + ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 2), "Spawn DC prefix preserves message and trims whitespace");
-    Check(ChatAlertText.Kill(japanese, "SHB", "Aglaope", "Zeromus", "21:34", "Meteor") == "[DC: Meteor] " + ChatAlertText.Kill(japanese, "SHB", "Aglaope", "Zeromus", "21:34"), "Kill DC prefix");
-    Check(ChatAlertText.Train(japanese, "SHB", "Zeromus", "Meteor") == "[DC: Meteor] " + ChatAlertText.Train(japanese, "SHB", "Zeromus"), "Train DC prefix");
-    foreach (var dc in new string?[] { null, "", " ", "unknown", "invalid" })
-        Check(ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 1, dc) == ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 1), "Missing DC omitted");
+    Check(!ChatAlertText.Spawn(japanese, "SHB", "Aglaope", "Zeromus", 2).Contains("DC:"), "No spawn DC label");
+    Check(!ChatAlertText.Kill(japanese, "SHB", "Aglaope", "Zeromus", "21:34").Contains("DC:"), "No kill DC label");
+    Check(!ChatAlertText.Train(japanese, "SHB", "Zeromus").Contains("DC:"), "No train DC label");
 }
 var rankNames = new HuntRankNames();
 rankNames.Add("Forgiven Rebellion");
@@ -114,4 +112,5 @@ for (var i = 1; i <= 50; i++)
 inbox.Enqueue(51, true, received);
 inbox.Clear();
 Check(inbox.Count == 0 && !inbox.TryTake(true, out _), "Unload clears pending entries");
-Console.WriteLine($"Passed {checks} relay, chat, rank and deferred-history checks.");
+OutcomeTests.Run(Check);
+Console.WriteLine($"Passed {checks} relay, chat, rank, outcomes and deferred-history checks.");

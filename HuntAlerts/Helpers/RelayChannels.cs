@@ -116,8 +116,7 @@ public static class RelayChannels
         if (HuntAlerts.C.JapaneseRelay)
         {
             var names = RelayJapaneseNames.Resolve(entry);
-            var dc = WorldData.TryGetWorld(entry.huntWorld?.Trim() ?? "", out var huntWorld) ? huntWorld.Datacenter : "";
-            return JapaneseRelayText.Build(entry, useFlag, names.Creature, names.Zone, names.Aetheryte, dc);
+            return JapaneseRelayText.Build(entry, useFlag, names.Creature, names.Zone, names.Aetheryte);
         }
 
         var isTrain  = entry.huntType == "new_hunt";

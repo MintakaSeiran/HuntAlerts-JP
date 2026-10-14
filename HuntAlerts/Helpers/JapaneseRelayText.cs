@@ -9,7 +9,7 @@ namespace HuntAlerts.Helpers;
 // ゲームサービスと分離し、日本語・欠損値・文字数制限を単体検証する。
 internal static partial class JapaneseRelayText
 {
-    internal static string Build(HuntTrainMessage entry, bool useFlag, string creature, string zone, string aetheryte, string datacenter)
+    internal static string Build(HuntTrainMessage entry, bool useFlag, string creature, string zone, string aetheryte)
     {
         var parts = new List<string>();
         var isTrain = entry.huntType == "new_hunt";
@@ -18,8 +18,6 @@ internal static partial class JapaneseRelayText
         Add(parts, zone);
         var nearest = Clean(aetheryte);
         if (nearest.Length > 0) parts.Add($"最寄り: {nearest}");
-        var dc = Clean(datacenter);
-        if (dc.Length > 0) parts.Add($"DC: {dc}");
         var world = Clean(entry.huntWorld);
         if (world.Length > 0) parts.Add($"サーバー: {world}");
         if (entry.instance > 1) parts.Add($"インスタンス{entry.instance}");

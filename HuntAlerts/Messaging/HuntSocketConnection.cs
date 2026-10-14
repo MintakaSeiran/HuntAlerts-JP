@@ -210,7 +210,7 @@ public sealed class HuntSocketConnection : IDisposable
         var receivedAtUtc = DateTime.UtcNow;
         _ = new TickScheduler(() =>
         {
-            if (disposed || Service.Snooze.IsSnoozed) return;
+            if (disposed || (Service.Snooze.IsSnoozed && !(hm.Type == "srank" && hm.DeathTime > 0))) return;
             var historyOnly = receivedWithoutPlayer || SnapshotPlayer().CurrentWorld == null;
             if (inbox.Enqueue(hm, historyOnly, receivedAtUtc))
                 PluginLog.Warning("HuntAlerts: pending history exceeded 50 messages; oldest pending event discarded.");
@@ -443,7 +443,7 @@ public sealed class HuntSocketConnection : IDisposable
         Service.ToastWindow.Show(htMessage);
 
         if (config.ChatAlertsEnabled)
-            PrintChat(BuildLinkedLine(link, ChatAlertText.Train(config.JapaneseChatAlerts, hm.Kind, hm.World, huntDc), config.TextColor));
+            PrintChat(BuildLinkedLine(link, ChatAlertText.Train(config.JapaneseChatAlerts, hm.Kind, hm.World), config.TextColor));
 
         if (!Utilities.MuteAlertSoundNow)
         {
@@ -457,6 +457,11 @@ public sealed class HuntSocketConnection : IDisposable
     private void HandleSRankEvent(HuntMessage hm, bool historyOnly = false)
     {
         var config = HuntAlerts.C;
+
+        // Keep already-tracked appearances accurate even if the user moved or muted new alerts.
+        if (hm.DeathTime > 0)
+            Service.MessageCacheManager.RecordDefeat(hm.World, hm.CreatureName, hm.Instance, hm.Posted_Epoch,
+                hm.DeathTime, hm.LocationName, hm.Kind, knownOnly: true);
 
         if (Service.Snooze.IsSnoozed)
         {
@@ -640,7 +645,7 @@ public sealed class HuntSocketConnection : IDisposable
             if (config.ChatAlertsEnabled)
             {
                 var displayCreature = config.JapaneseChatAlerts ? RelayJapaneseNames.ResolveCreature(creatureName) : creatureName;
-                var label = ChatAlertText.Spawn(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, instance, huntDc);
+                var label = ChatAlertText.Spawn(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, instance);
                 PrintChat(BuildLinkedLine(link, label, config.SRankTextColor));
             }
 
@@ -654,6 +659,8 @@ public sealed class HuntSocketConnection : IDisposable
         }
         else
         {
+            Service.MessageCacheManager.RecordDefeat(hm.World, creatureName, instance, hm.Posted_Epoch,
+                deathTime, locationName, hm.Kind);
             if (historyOnly) return;
             if (!config.SRankKillNotifications || !config.ChatAlertsEnabled)
             {
@@ -669,7 +676,7 @@ public sealed class HuntSocketConnection : IDisposable
             var deathTimeText = config.JapaneseChatAlerts
                 ? DateTimeOffset.FromUnixTimeSeconds(deathTime).ToLocalTime().ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture)
                 : HuntMessageFormatting.ConvertTime(deathTime);
-            var label = ChatAlertText.Kill(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, deathTimeText, huntDc);
+            var label = ChatAlertText.Kill(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, deathTimeText);
             var b = new SeStringBuilder();
             if (config.SRankKillTextColor != 0) b.AddUiForeground((ushort)config.SRankKillTextColor);
             b.AddText(label);

@@ -6,6 +6,7 @@ using HuntAlerts.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace HuntAlerts.Services;
@@ -22,17 +23,38 @@ public class MessageCacheManager : IDisposable
     private readonly DalamudLinkPayload[] PayloadList = new DalamudLinkPayload[Capacity];
     private readonly HuntTrainMessage?[]  Messages    = new HuntTrainMessage?[Capacity];
     private int CommandCount = 0;
+    internal string OutcomeLogPath => Path.Combine(Svc.PluginInterface.ConfigDirectory.FullName, "HuntAlerts.Outcomes.jsonl");
+    private readonly HuntOutcomeStore outcomes;
+    internal string? OutcomeLogError => outcomes.LastError;
+    internal HuntOutcome Outcome(HuntTrainMessage message) => outcomes.Book.Get(message);
 
     // "History cleared" watermark: entries with a sequence number below this are hidden from the history list but stay in Messages, so previously posted chat links keep resolving.
     private int ClearedAtCount = 0;
 
     public MessageCacheManager()
     {
+        outcomes = new HuntOutcomeStore(OutcomeLogPath, text => PluginLog.Warning(text));
         for (var i = 0u; i < Capacity; i++)
         {
             PayloadList[i] = Svc.Chat.AddChatLinkHandler(i, ProcessLinkPayload);
         }
         LoadFromDisk();
+        foreach (var entry in Messages)
+            if (entry != null) RecordSpawn(entry);
+    }
+
+    private void RecordSpawn(HuntTrainMessage message)
+    {
+        if (message.huntType == "srank")
+            outcomes.Record(new HuntOutcomeEvent(1, message.huntWorld, message.creatureName, message.instance,
+                message.PostedEpoch, 0, message.startZone, message.huntKind));
+    }
+
+    internal bool RecordDefeat(string world, string creature, int instance, long posted, long death,
+        string zone, string kind, bool knownOnly = false)
+    {
+        if (death <= 0 || (knownOnly && !outcomes.Book.HasHistory(world, creature, instance))) return false;
+        return outcomes.Record(new HuntOutcomeEvent(1, world, creature, instance, posted, death, zone, kind));
     }
 
     private void LoadFromDisk()
@@ -70,6 +92,7 @@ public class MessageCacheManager : IDisposable
 
     public DalamudLinkPayload AddMessage(HuntTrainMessage message)
     {
+        RecordSpawn(message);
         var nextCommand = CommandCount % Capacity;
         CommandCount++;
         Messages[nextCommand] = message;
@@ -124,6 +147,7 @@ public class MessageCacheManager : IDisposable
 
     public void Dispose()
     {
+        outcomes.Flush();
         Svc.Chat.RemoveChatLinkHandler();
     }
 }

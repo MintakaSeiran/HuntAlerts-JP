@@ -1,0 +1,6 @@
+<Project>
+  <!-- API 15.0.3.7 adds a native ExcelPage; the pinned ECommons sheet uses Lumina's type. -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'ECommons'">
+    <Using Include="Lumina.Excel.ExcelPage" Alias="ExcelPage" />
+  </ItemGroup>
+</Project>

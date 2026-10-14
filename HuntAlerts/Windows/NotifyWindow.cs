@@ -152,6 +152,13 @@ public class NotifyWindow : Window
         if (!string.IsNullOrEmpty(entry.Posted_Time))
             Components.FieldRow("Posted",    entry.Posted_Time);
 
+        var outcome = Service.MessageCacheManager.Outcome(entry);
+        if (outcome.DeathEpoch > 0)
+            Components.FieldRow("撃破済", HuntOutcomeText.Clock(outcome.DeathEpoch, true));
+        if (outcome.DurationSeconds is long duration)
+            Components.FieldRow("告知→討伐", HuntOutcomeText.Duration(duration));
+        Components.FieldRow("過去の告知→討伐", HuntOutcomeText.Average(outcome, true));
+
         ImGui.Spacing();
         ImGui.PushStyleColor(ImGuiCol.Text, Theme.Subtle);
         ImGui.PushTextWrapPos();

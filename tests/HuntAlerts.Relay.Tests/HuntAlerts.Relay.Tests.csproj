@@ -12,5 +12,8 @@
     <Compile Include="../../HuntAlerts/Helpers/ChatAlertText.cs" Link="ChatAlertText.cs" />
     <Compile Include="../../HuntAlerts/Helpers/HuntRankNames.cs" Link="HuntRankNames.cs" />
     <Compile Include="../../HuntAlerts/Messaging/DeferredHuntInbox.cs" Link="DeferredHuntInbox.cs" />
+    <Compile Include="../../HuntAlerts/Helpers/HuntOutcomeBook.cs" Link="HuntOutcomeBook.cs" />
+    <Compile Include="../../HuntAlerts/Helpers/HuntOutcomeStore.cs" Link="HuntOutcomeStore.cs" />
+    <Compile Include="../../HuntAlerts/Helpers/HuntOutcomeText.cs" Link="HuntOutcomeText.cs" />
   </ItemGroup>
 </Project>

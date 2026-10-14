@@ -7,6 +7,9 @@ using HuntAlerts.Services;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Diagnostics;
+using System.IO;
+using Dalamud.Interface.Components;
 
 namespace HuntAlerts.Windows;
 
@@ -111,6 +114,16 @@ public class HuntListWindow : Window
         ImGui.TextUnformatted($"  ·  {count} cached");
         ImGui.PopStyleColor();
 
+        ImGui.SameLine();
+        if (ImGuiComponents.IconButton("##outcomeFolder", FontAwesomeIcon.FolderOpen))
+            Process.Start(new ProcessStartInfo(Path.GetDirectoryName(Service.MessageCacheManager.OutcomeLogPath)!) { UseShellExecute = true });
+        if (ImGui.IsItemHovered()) ImGui.SetTooltip("討伐ログのフォルダーを開く");
+        if (Service.MessageCacheManager.OutcomeLogError != null)
+        {
+            ImGui.TextColored(new Vector4(1, 0.5f, 0.4f, 1), "討伐ログの保存・読み込みに失敗");
+            if (ImGui.IsItemHovered()) ImGui.SetTooltip(Service.MessageCacheManager.OutcomeLogError);
+        }
+
         if (count > 0)
         {
             ImGui.SameLine();
@@ -156,6 +169,35 @@ public class HuntListWindow : Window
         {
             var msg = messages[i];
             if (msg == null) continue;
+
+            if (msg.huntType == "srank")
+            {
+                var outcome = Service.MessageCacheManager.Outcome(msg);
+                var point = ImGui.GetCursorScreenPos();
+                var available = ImGui.GetContentRegionAvail().X;
+                ImGui.PushID(i);
+                if (ImGui.InvisibleButton("##card", new Vector2(available, HuntHistoryCard.Height)))
+                {
+                    Service.NotifyWindow.IsOpen = true;
+                    Service.NotifyWindow.CurrentMessage = msg;
+                }
+                var over = ImGui.IsItemHovered();
+                var creature = HuntAlerts.C.JapaneseChatAlerts ? RelayJapaneseNames.ResolveCreature(msg.creatureName) : msg.creatureName;
+                var location = $"{msg.huntWorld}{(msg.instance > 1 ? $" i{msg.instance}" : "")} / {msg.startZone}";
+                HuntHistoryCard.Draw(drawList, point, available, HuntRankDisplay.Rank(msg), creature,
+                    location, msg.PostedEpoch, outcome, HuntAlerts.C.JapaneseChatAlerts, over);
+                if (over)
+                {
+                    ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    ImGui.SetTooltip($"{creature}\n{location}\n出現告知: {HuntOutcomeText.Clock(msg.PostedEpoch, true)}\n"
+                        + (outcome.DeathEpoch > 0 ? $"討伐: {HuntOutcomeText.Clock(outcome.DeathEpoch, true)}\n" : "")
+                        + (outcome.DurationSeconds is long duration ? $"告知→討伐: {HuntOutcomeText.Duration(duration)}\n" : "")
+                        + HuntOutcomeText.Average(outcome, true) + "\n同一サーバー・モブ・インスタンスの過去の告知→討伐時間");
+                }
+                ImGui.SetCursorScreenPos(point + new Vector2(0, HuntHistoryCard.Height + cardSpacing));
+                ImGui.PopID();
+                continue;
+            }
 
             var isTrain    = msg.huntType == "new_hunt";
             var badgeText  = isTrain ? "TRAIN" : $"{HuntRankDisplay.Rank(msg)} RANK";
