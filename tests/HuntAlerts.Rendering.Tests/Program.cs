@@ -24,20 +24,21 @@ unsafe
         foreach (var scale in new[] { 1f, 1.5f, 2f })
         foreach (var japanese in new[] { false, true })
         foreach (var dead in new[] { false, true })
+        foreach (var rows in new[] { 2, 3 })
         {
             io.FontGlobalScale = scale;
             ImGui.NewFrame();
             var list = ImGui.GetForegroundDrawList();
             var origin = new Vector2(20, 20);
             var outcome = new HuntOutcome(dead ? 1792011000 : 0, dead ? 180 : null, 180, 1234);
-            HuntHistoryCard.Draw(list, origin, width, "SS", new string('長', 60), "Valefor / 長い地名テスト", 1792010820, outcome, japanese, true);
+            HuntHistoryCard.Draw(list, origin, width, "SS", new string('長', 60), "長い地名テスト", 1792010820, outcome, japanese, true, rows);
             var red = false;
             for (var i = 0; i < list.VtxBuffer.Size; i++)
             {
                 var v = list.VtxBuffer[i];
                 if (!float.IsFinite(v.Pos.X) || !float.IsFinite(v.Pos.Y)
                     || v.Pos.X < origin.X - 2 || v.Pos.X > origin.X + width + 2
-                    || v.Pos.Y < origin.Y - 2 || v.Pos.Y > origin.Y + HuntHistoryCard.Height + 2)
+                    || v.Pos.Y < origin.Y - 2 || v.Pos.Y > origin.Y + HuntHistoryCard.Height(rows) + 2)
                     throw new Exception($"Geometry outside card: width={width} scale={scale} JP={japanese} dead={dead} at {v.Pos}");
                 red |= v.Col == 0xff4646e8;
             }
@@ -57,9 +58,9 @@ unsafe
             foreach (var (name, dead, samples) in new[] { ("サウザンドキャスト・セダ", false, 3), ("サウザンドキャスト・セダ", true, 2), ("ミニョーカオン", true, 0) })
             {
                 HuntHistoryCard.Draw(list, new Vector2(14, y), 522, "S", name,
-                    "Valefor / 黒衣森：北部森林", 1792010820,
+                    "黒衣森：北部森林", 1792010820,
                     new HuntOutcome(dead ? 1792011000 : 0, dead ? 180 : null, samples > 0 ? 180 : null, samples), true, false);
-                y += HuntHistoryCard.Height + 8;
+                y += HuntHistoryCard.Height(3) + 8;
             }
             ImGui.Render();
             io.Fonts.GetTexDataAsRGBA32(0, &atlas, &aw, &ah);

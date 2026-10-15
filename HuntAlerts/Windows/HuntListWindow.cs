@@ -175,8 +175,9 @@ public class HuntListWindow : Window
                 var outcome = Service.MessageCacheManager.Outcome(msg);
                 var point = ImGui.GetCursorScreenPos();
                 var available = ImGui.GetContentRegionAvail().X;
+                var rows = HuntAlerts.C.HistoryRows == 2 ? 2 : 3;
                 ImGui.PushID(i);
-                if (ImGui.InvisibleButton("##card", new Vector2(available, HuntHistoryCard.Height)))
+                if (ImGui.InvisibleButton("##card", new Vector2(available, HuntHistoryCard.Height(rows))))
                 {
                     Service.NotifyWindow.IsOpen = true;
                     Service.NotifyWindow.CurrentMessage = msg;
@@ -185,7 +186,8 @@ public class HuntListWindow : Window
                 var creature = HuntAlerts.C.JapaneseChatAlerts ? RelayJapaneseNames.ResolveCreature(msg.creatureName) : msg.creatureName;
                 var location = $"{msg.huntWorld}{(msg.instance > 1 ? $" i{msg.instance}" : "")} / {msg.startZone}";
                 HuntHistoryCard.Draw(drawList, point, available, HuntRankDisplay.Rank(msg), creature,
-                    location, msg.PostedEpoch, outcome, HuntAlerts.C.JapaneseChatAlerts, over);
+                    msg.startZone, msg.PostedEpoch, outcome, HuntAlerts.C.JapaneseChatAlerts, over,
+                    rows, NormalizeKindLabel(msg.huntKind), $"{msg.huntWorld}{(msg.instance > 1 ? $" i{msg.instance}" : "")}", FormatRelativeAge(msg));
                 if (over)
                 {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
@@ -194,7 +196,7 @@ public class HuntListWindow : Window
                         + (outcome.DurationSeconds is long duration ? $"告知→討伐: {HuntOutcomeText.Duration(duration)}\n" : "")
                         + HuntOutcomeText.Average(outcome, true) + "\n同一サーバー・モブ・インスタンスの過去の告知→討伐時間");
                 }
-                ImGui.SetCursorScreenPos(point + new Vector2(0, HuntHistoryCard.Height + cardSpacing));
+                ImGui.SetCursorScreenPos(point + new Vector2(0, HuntHistoryCard.Height(rows) + cardSpacing));
                 ImGui.PopID();
                 continue;
             }

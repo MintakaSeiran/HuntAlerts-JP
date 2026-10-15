@@ -267,6 +267,11 @@ public class ConfigWindow : Window, IDisposable
         }
 
         ImGui.Spacing();
+        Components.SectionHeader("History");
+        var historyLayout = HuntAlerts.C.HistoryRows == 2 ? 0 : 1;
+        if (ImGui.Combo("履歴レイアウト", ref historyLayout, new[] { "2段", "3段" }, 2))
+        { HuntAlerts.C.HistoryRows = historyLayout == 0 ? 2 : 3; HuntAlerts.C.Save(); }
+
         Components.SectionHeader("Chat");
 
         var chatAlerts = HuntAlerts.C.ChatAlertsEnabled;
