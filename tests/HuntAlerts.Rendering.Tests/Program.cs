@@ -25,13 +25,17 @@ unsafe
         foreach (var japanese in new[] { false, true })
         foreach (var dead in new[] { false, true })
         foreach (var rows in new[] { 2, 3 })
+        foreach (var rank in new[] { "S", "SS" })
+        foreach (var badgePalette in new[] { 0, 1, 2 })
+        foreach (var backgroundPalette in new[] { 0, 1, 2 })
         {
             io.FontGlobalScale = scale;
             ImGui.NewFrame();
             var list = ImGui.GetForegroundDrawList();
             var origin = new Vector2(20, 20);
             var outcome = new HuntOutcome(dead ? 1792011000 : 0, dead ? 180 : null, 180, 1234);
-            HuntHistoryCard.Draw(list, origin, width, "SS", new string('長', 60), "長い地名テスト", 1792010820, outcome, japanese, true, rows);
+            HuntHistoryCard.Draw(list, origin, width, rank, new string('長', 60), "長い地名テスト", 1792010820, outcome, japanese, true, rows,
+                ssBadgePalette: badgePalette, ssBackgroundPalette: backgroundPalette);
             var red = false;
             for (var i = 0; i < list.VtxBuffer.Size; i++)
             {
@@ -55,11 +59,12 @@ unsafe
             list.AddRectFilled(Vector2.Zero, io.DisplaySize, 0xff202020);
             list.AddText(new Vector2(20, 10), 0xffeeeeee, "HuntAlerts History");
             var y = 40f;
-            foreach (var (name, dead, samples) in new[] { ("サウザンドキャスト・セダ", false, 3), ("サウザンドキャスト・セダ", true, 2), ("ミニョーカオン", true, 0) })
+            foreach (var (palette, dead) in new[] { (1, false), (2, false), (2, true) })
             {
-                HuntHistoryCard.Draw(list, new Vector2(14, y), 522, "S", name,
-                    "黒衣森：北部森林", 1792010820,
-                    new HuntOutcome(dead ? 1792011000 : 0, dead ? 180 : null, samples > 0 ? 180 : null, samples), true, false);
+                HuntHistoryCard.Draw(list, new Vector2(14, y), 522, "SS", "Sample SS",
+                    "Sample area", 1792010820,
+                    new HuntOutcome(dead ? 1792011000 : 0, dead ? 180 : null, 180, 3), true, false,
+                    kind: "Shadowbringers", ssBadgePalette: palette, ssBackgroundPalette: palette);
                 y += HuntHistoryCard.Height(3) + 8;
             }
             ImGui.Render();

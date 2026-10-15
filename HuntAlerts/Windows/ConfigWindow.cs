@@ -271,6 +271,13 @@ public class ConfigWindow : Window, IDisposable
         var historyLayout = HuntAlerts.C.HistoryRows == 2 ? 0 : 1;
         if (ImGui.Combo("履歴レイアウト", ref historyLayout, new[] { "2段", "3段" }, 2))
         { HuntAlerts.C.HistoryRows = historyLayout == 0 ? 2 : 3; HuntAlerts.C.Save(); }
+        var palettes = new[] { "標準", "黄色", "七色" };
+        var ssBadge = Math.Clamp(HuntAlerts.C.SsBadgePalette, 0, 2);
+        if (ImGui.Combo("SSバッジ配色", ref ssBadge, palettes, palettes.Length))
+        { HuntAlerts.C.SsBadgePalette = ssBadge; HuntAlerts.C.Save(); }
+        var ssBackground = Math.Clamp(HuntAlerts.C.SsBackgroundPalette, 0, 2);
+        if (ImGui.Combo("SS背景配色", ref ssBackground, palettes, palettes.Length))
+        { HuntAlerts.C.SsBackgroundPalette = ssBackground; HuntAlerts.C.Save(); }
 
         Components.SectionHeader("Chat");
 
@@ -361,6 +368,17 @@ public class ConfigWindow : Window, IDisposable
         DrawSoundSettings(SoundKind.Train, "Train Sound", Sounds.Train);
         ImGui.Spacing();
         DrawSoundSettings(SoundKind.SRank, "S-Rank Sound", Sounds.SRank);
+        var ssSound = Math.Clamp(HuntAlerts.C.SsSoundEffect, 0, 16);
+        var ssSounds = Enumerable.Range(0, 17).Select(i => i == 0 ? "通常Sと同じ" : $"Sound {i}").ToArray();
+        if (ImGui.Combo("SS出現通知音", ref ssSound, ssSounds, ssSounds.Length))
+        {
+            HuntAlerts.C.SsSoundEffect = ssSound;
+            HuntAlerts.C.Save();
+            if (ssSound > 0) UIGlobals.PlayChatSoundEffect((uint)ssSound);
+        }
+        var rainbowChat = HuntAlerts.C.SsRainbowChat;
+        if (ImGui.Checkbox("SS出現ログを七色にする", ref rainbowChat))
+        { HuntAlerts.C.SsRainbowChat = rainbowChat; HuntAlerts.C.Save(); }
         if (!string.IsNullOrEmpty(_soundResult))
         {
             ImGui.PushStyleColor(ImGuiCol.Text, Theme.Subtle);

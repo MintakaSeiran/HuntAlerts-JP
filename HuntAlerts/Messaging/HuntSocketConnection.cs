@@ -642,16 +642,19 @@ public sealed class HuntSocketConnection : IDisposable
 
             Service.ToastWindow.Show(htMessage);
 
+            var isSs = HuntRankDisplay.Rank(htMessage) == "SS";
             if (config.ChatAlertsEnabled)
             {
                 var displayCreature = config.JapaneseChatAlerts ? RelayJapaneseNames.ResolveCreature(creatureName) : creatureName;
                 var label = ChatAlertText.Spawn(config.JapaneseChatAlerts, hm.Kind, displayCreature, hm.World, instance);
-                PrintChat(BuildLinkedLine(link, label, config.SRankTextColor));
+                PrintChat(BuildLinkedLine(link, label, config.SRankTextColor, isSs && config.SsRainbowChat));
             }
 
             if (!Utilities.MuteAlertSoundNow)
             {
-                if (config.UseCustomSRankSound && Sounds.SRank.Exists)
+                if (isSs && config.SsSoundEffect is >= 1 and <= 16)
+                    UIGlobals.PlayChatSoundEffect((uint)config.SsSoundEffect);
+                else if (config.UseCustomSRankSound && Sounds.SRank.Exists)
                     Sounds.SRank.Play(config.CustomSRankSoundVolume);
                 else if (config.SRankSoundEffect != 0)
                     UIGlobals.PlayChatSoundEffect((uint)config.SRankSoundEffect);
@@ -733,9 +736,23 @@ public sealed class HuntSocketConnection : IDisposable
         return Svc.Data.GetExcelSheet<World>().TryGetFirst(w => w.IsPublic && w.Name.ExtractText().Equals(worldName, StringComparison.OrdinalIgnoreCase), out world);
     }
 
-    private static SeString BuildLinkedLine(DalamudLinkPayload link, string text, int color)
+    private static SeString BuildLinkedLine(DalamudLinkPayload link, string text, int color, bool rainbow = false)
     {
         var b = new SeStringBuilder();
+        if (rainbow)
+        {
+            ushort[] colors = [17, 500, 514, 45, 52, 502, 561];
+            b.Add(link);
+            var elements = System.Globalization.StringInfo.GetTextElementEnumerator(text);
+            var index = 0;
+            while (elements.MoveNext())
+            {
+                b.AddUiForeground(colors[index++ % colors.Length]);
+                b.AddText(elements.GetTextElement());
+            }
+            b.AddUiForegroundOff().Add(RawPayload.LinkTerminator);
+            return b.Build();
+        }
         if (color != 0) b.AddUiForeground((ushort)color);
         b.Add(link).AddText(text).Add(RawPayload.LinkTerminator);
         if (color != 0) b.AddUiForegroundOff();

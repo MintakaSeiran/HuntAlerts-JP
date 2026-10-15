@@ -187,7 +187,8 @@ public class HuntListWindow : Window
                 var location = $"{msg.huntWorld}{(msg.instance > 1 ? $" i{msg.instance}" : "")} / {msg.startZone}";
                 HuntHistoryCard.Draw(drawList, point, available, HuntRankDisplay.Rank(msg), creature,
                     msg.startZone, msg.PostedEpoch, outcome, HuntAlerts.C.JapaneseChatAlerts, over,
-                    rows, NormalizeKindLabel(msg.huntKind), $"{msg.huntWorld}{(msg.instance > 1 ? $" i{msg.instance}" : "")}", FormatRelativeAge(msg));
+                    rows, NormalizeKindLabel(msg.huntKind), $"{msg.huntWorld}{(msg.instance > 1 ? $" i{msg.instance}" : "")}", FormatRelativeAge(msg),
+                    HuntAlerts.C.SsBadgePalette, HuntAlerts.C.SsBackgroundPalette);
                 if (over)
                 {
                     ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);

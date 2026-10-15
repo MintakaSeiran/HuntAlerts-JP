@@ -11,11 +11,16 @@ internal static class HuntHistoryCard
 
     internal static void Draw(ImDrawListPtr list, Vector2 origin, float width, string rank, string creature,
         string location, long posted, HuntOutcome outcome, bool japanese, bool hovered,
-        int rows = 3, string kind = "Centurio", string world = "Valefor", string age = "Today")
+        int rows = 3, string kind = "Centurio", string world = "Valefor", string age = "Today",
+        int ssBadgePalette = 0, int ssBackgroundPalette = 0)
     {
         var end = origin + new Vector2(width, Height(rows));
         var dead = outcome.DeathEpoch > 0;
+        var badgePalette = rank == "SS" && ssBadgePalette is 1 or 2 ? ssBadgePalette : 0;
+        var backgroundPalette = rank == "SS" && ssBackgroundPalette is 1 or 2 ? ssBackgroundPalette : 0;
         list.AddRectFilled(origin, end, dead ? 0xff151515 : hovered ? Theme.CardBgHover : Theme.CardBg, 6);
+        if (backgroundPalette != 0)
+            PaletteFill(list, origin + new Vector2(5, 2), end - new Vector2(2), backgroundPalette, dead ? 0.12f : hovered ? 0.36f : 0.28f);
         list.AddRect(origin, end, dead ? 0xff383838 : hovered ? Theme.SRankBorder : Theme.CardBorder, 6);
         list.AddRectFilled(origin, new Vector2(origin.X + 4, end.Y), dead ? 0xff494949 : Theme.SRankBorder, 4);
         var color = dead ? 0xffaaaaaa : Theme.Text;
@@ -29,7 +34,7 @@ internal static class HuntHistoryCard
                 .ToLocalTime().ToString("hh:mm tt", System.Globalization.CultureInfo.GetCultureInfo("en-US"));
         var clockWidth = ImGui.CalcTextSize(clock).X;
         var leftWidth = Math.Max(0, width - 42 - clockWidth);
-        var badgeWidth = Badge(rank + " RANK", textLeft, leftWidth, Theme.SRankBg, Theme.SRankBorder, Theme.SRankText);
+        var badgeWidth = Badge(rank + " RANK", textLeft, leftWidth, Theme.SRankBg, Theme.SRankBorder, Theme.SRankText, badgePalette);
         Text(kind, textLeft + new Vector2(badgeWidth + 8, 1), leftWidth - badgeWidth - 8, color);
         Text(clock, new Vector2(end.X - 12 - clockWidth, textLeft.Y + 1), clockWidth, color);
         var second = textLeft + new Vector2(0, line);
@@ -43,13 +48,15 @@ internal static class HuntHistoryCard
         if (dead)
             Stamp(list, new Vector2(end.X - 18 - stampWidth / 2, end.Y - 12 - ImGui.GetTextLineHeight() / 2), stampText, 0.65f);
 
-        float Badge(string text, Vector2 position, float available, uint bg, uint border, uint fg)
+        float Badge(string text, Vector2 position, float available, uint bg, uint border, uint fg, int palette = 0)
         {
             var label = Fit(text, Math.Max(0, available - 12));
             var size = new Vector2(Math.Min(Math.Max(0, available), ImGui.CalcTextSize(label).X + 12), ImGui.GetTextLineHeight() + 2);
             list.AddRectFilled(position, position + size, dead ? 0xff252525 : bg, 2);
             list.AddRect(position, position + size, dead ? 0xff494949 : border, 2);
-            Text(label, position + new Vector2(6, 1), size.X - 12, dead ? color : fg);
+            if (palette != 0)
+                PaletteFill(list, position + Vector2.One, position + size - Vector2.One, palette, dead ? 0.22f : 0.48f);
+            Text(label, position + new Vector2(6, 1), size.X - 12, dead ? color : palette != 0 ? 0xffffffff : fg);
             return size.X;
         }
 
@@ -65,6 +72,28 @@ internal static class HuntHistoryCard
         {
             var position = textLeft + new Vector2(0, row * line);
             Text(text, position, available, tint);
+        }
+    }
+
+    private static readonly Vector3[] Rainbow =
+    [new(1, 0.15f, 0.15f), new(1, 0.5f, 0.05f), new(1, 0.9f, 0.1f), new(0.15f, 0.85f, 0.3f),
+        new(0.1f, 0.65f, 1), new(0.3f, 0.25f, 1), new(0.8f, 0.2f, 0.9f)];
+
+    private static void PaletteFill(ImDrawListPtr list, Vector2 min, Vector2 max, int palette, float brightness)
+    {
+        if (max.X <= min.X || max.Y <= min.Y) return;
+        uint Tint(Vector3 rgb) => ImGui.ColorConvertFloat4ToU32(new Vector4(rgb * brightness, 1));
+        if (palette == 1)
+        {
+            list.AddRectFilled(min, max, Tint(new Vector3(1, 0.82f, 0.12f)), 2);
+            return;
+        }
+        for (var i = 0; i < Rainbow.Length - 1; i++)
+        {
+            var left = min.X + (max.X - min.X) * i / (Rainbow.Length - 1);
+            var right = min.X + (max.X - min.X) * (i + 1) / (Rainbow.Length - 1);
+            var a = Tint(Rainbow[i]); var b = Tint(Rainbow[i + 1]);
+            list.AddRectFilledMultiColor(new Vector2(left, min.Y), new Vector2(right, max.Y), a, b, b, a);
         }
     }
 
