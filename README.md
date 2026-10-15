@@ -6,6 +6,14 @@ This README describes the implemented features in English. Translations of Japan
 
 ## Implemented Features
 
+### SS Notifications (1.4.1.14)
+
+The S-rank sound settings now include an SS spawn sound selector (inherit normal S, or game Sound 1-16) and an optional seven-color SS spawn chat log. Defaults preserve existing behavior. Confirmed SS names use the existing rank lookup. Inherit also retains the normal S custom MP3 setting. The seven-color text preserves the details link and resets its color afterward; relay and kill messages are unchanged. Snooze, cutscene muting, duty suppression and silent deferred-history processing still apply. No SS-specific MP3 import is added. In-game audio, chat colors and link interaction remain unverified.
+
+### SS Colors (Included in 1.4.1.14)
+
+General > History provides independent SS badge and background palettes: Standard, Yellow, and Rainbow. Defaults preserve the existing appearance. Only confirmed SS history cards use these settings; S ranks, minions, train cards and detail-window badges are unchanged. Rainbow is a static horizontal gradient. Defeated SS cards retain a darker tint and the defeated stamp. Both two-row and three-row layouts are supported. Logic checks: 208 passed; native geometry cases: 1,296 passed. In-game verification is pending. Published as a maintainer-approved prerelease.
+
 ### Layout Update (1.4.1.12)
 
 General > History offers two-row and three-row S/SS history cards (default: three rows). Both restore the original rank and world badges, expansion label, area and right-aligned time. Defeated cards show kill time instead of spawn time; the tooltip retains both. Three rows show the prior average directly; two rows keep it in the tooltip/detail window. Defeated dimming, stamp, archive and calculations are unchanged. Published as a prerelease at the maintainer's request. In-game verification remains pending.
@@ -80,7 +88,7 @@ This fork retains the upstream project's [AGPL-3.0-or-later](LICENSE) license de
 
 ## Download and Installation
 
-[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.6/HuntAlerts-JP-1.4.1.7_jp_min.6.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.6)
+[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.8/HuntAlerts-JP-1.4.1.7_jp_min.8.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.8)
 
 This is a prerelease: the build and automated checks pass, but in-game behavior has not been verified.
 
@@ -107,7 +115,7 @@ For manual development installation, extract the entire ZIP into a development p
 
 Updated October 15, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
 
-InformationalVersion: `1.4.1.7_jp_min.6`; assembly version: `1.4.1.12`. The published feed provides `1.4.1.12`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
+InformationalVersion: `1.4.1.7_jp_min.8`; assembly version: `1.4.1.14`. The published feed provides `1.4.1.14`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
 
 ### Relay Message Format
 
