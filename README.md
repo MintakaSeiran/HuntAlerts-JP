@@ -6,9 +6,21 @@ This README describes the implemented features in English. Translations of Japan
 
 ## Implemented Features
 
+### Defeat History Update (1.4.1.7_jp_min.5 / 1.4.1.11)
+
+Published as a prerelease at the maintainer's request. In-game verification is pending.
+
+- Kill events dim matching history cards, add a red diagonal defeated stamp, and show the local death time. Matching uses world, creature, instance and timestamps, with a 24-hour limit.
+- Subsequent appearances show the average **announcement-to-death** interval and sample count from earlier completed appearances of the same target on the same world/instance. This is not combat duration. Unmatched kills do not contribute.
+- An append-only `HuntAlerts.Outcomes.jsonl` archive in the plugin configuration directory preserves observations beyond the 50-card cache and Clear. The history folder button opens that directory. Previously discarded kill events cannot be recovered.
+- Known targets receive kill updates even when snoozed or after changing world filters. Deferred kills update silently after travel. Unknown targets still require current filters to pass.
+- Chat and relay no longer display DC names. DC filtering and travel-time reception retention remain enabled.
+
+Detailed specification and limitations: [Defeat history](docs/DEFEAT_HISTORY.md).
+
 ### History Update (1.4.1.7_jp_min.4 / 1.4.1.10)
 
-Released as a prerelease at the maintainer's request. In-game behavior remains unverified.
+Released as a prerelease at the maintainer's request. In-game behavior remains unverified. The following describes 1.4.1.10; the update above supersedes its kill-event and snooze behavior.
 
 - History cards and their detail header show **SS RANK** only for confirmed SS boss names. Names are loaded in EN/JP/DE/FR from BNpcName IDs `0x22D3`, `0x2977`, and `0x345E`. Normal S ranks, minions, missing names, and unrecognized names are not promoted. Existing cached entries use the same display-time lookup without a history migration. Chat, relay, toast text and IPC schemas remain unchanged.
 - Received hunt events are no longer discarded just because the player is logged out during datacenter travel. The plugin holds the latest 50 pending events in memory and processes up to five per framework update after a valid player/world/DC context returns. Overflow drops the oldest pending event and writes a warning.
@@ -29,7 +41,7 @@ Japanese specification and manual test steps: [History update](docs/HISTORY_UPDA
 
 ### Notification Controls
 
-- Snooze incoming alerts for 5, 15, 30, 60, or 120 minutes, and wake them early from settings or the history window. Snoozed messages are skipped before they enter history.
+- Snooze incoming alerts for 5, 15, 30, 60, or 120 minutes, and wake them early from settings or the history window. Snoozed spawn/train messages are skipped; this release still update kills for known targets.
 - Optionally hide alert popups, chat messages, and sounds while in instanced content; accepted train and S-rank spawn alerts still enter history.
 - Optionally mute alert sounds during cutscenes while retaining the popup and chat message.
 - Choose game sound effects or import custom MP3 sounds separately for trains and S ranks, with adjustable custom sound volume.
@@ -64,7 +76,7 @@ This fork retains the upstream project's [AGPL-3.0-or-later](LICENSE) license de
 
 ## Download and Installation
 
-[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.4/HuntAlerts-JP-1.4.1.7_jp_min.4.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.4)
+[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.5/HuntAlerts-JP-1.4.1.7_jp_min.5.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.5)
 
 This is a prerelease: the build and automated checks pass, but in-game behavior has not been verified.
 
@@ -89,24 +101,24 @@ For manual development installation, extract the entire ZIP into a development p
 
 ## Japanese Relay Changes
 
-Updated October 12, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
+Updated October 15, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
 
-InformationalVersion: `1.4.1.7_jp_min.4`. AssemblyVersion and the Dalamud manifest version are `1.4.1.10` so the installer can detect this update. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
+InformationalVersion: `1.4.1.7_jp_min.5`; assembly version: `1.4.1.11`. The published feed provides `1.4.1.11`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
 
 ### Relay Message Format
 
 Messages follow the layout used by AS Mob Plate recruitment comments. This example is translated into English for documentation; actual relay messages use Japanese names and labels where available:
 
 ```text
-[S] Zona Seeker / Western Thanalan / Nearest: Horizon / DC: Meteor / Server: Yojimbo / POS: (26.8, 16.9)
+[S] Zona Seeker / Western Thanalan / Nearest: Horizon / Server: Yojimbo / POS: (26.8, 16.9)
 ```
 
-- The DC is resolved from the alert's target world, not the player's current DC or world.
+- This release omit the DC name from relay output; the target server remains visible.
 - Creature names are matched between English and Japanese BNpcName rows by row ID. Area and aetheryte names use the alert's IDs and Japanese PlaceName data, with English name matching when IDs are unavailable. Untranslated names retain their original spelling.
 - The nearest aetheryte field uses the destination selected by upstream for the alert. This fork does not change the distance calculation.
 - Valid coordinates appear in POS with one decimal place. Older alerts can also use coordinate strings. Missing, zero, non-finite, or negative coordinates are omitted.
 - When `Add clickable map flag when relaying` is enabled and the required map ID and coordinates are available, `<flag>` is appended. POS remains visible. If setting the flag throws an exception, the message is sent without the link.
-- Instance numbers of 2 or higher are included. No unconfirmed start ET is added. Unknown DC, server, and name fields are omitted.
+- Instance numbers of 2 or higher are included. No unconfirmed start ET is added. Unknown server and name fields are omitted.
 - Train alerts use a Japanese hunt train label and expansion name, distinguishing them from S-rank alerts.
 - Messages exceeding 500 UTF-8 bytes, including the channel command, are not sent. An explanation appears in the player's chat instead of silently truncating information.
 
@@ -133,14 +145,16 @@ S-rank spawn notices, S-rank kill notices, and hunt train notices can now appear
 The following is an English translation of the Japanese spawn message for documentation:
 
 ```text
-[DC: Meteor] An S-rank Aglaope from Shadowbringers has appeared on Zeromus! (Click for details)
+An S-rank Aglaope from Shadowbringers has appeared on Zeromus! (Click for details)
 ```
 
-Under **Chat**, the new Japanese-labeled checkbox means "Display notification logs in Japanese." It controls `JapaneseChatAlerts`, is enabled by default, and works independently of `JapaneseRelay`. Disabling it restores English chat messages. Both languages include a `[DC: name]` prefix resolved from the alert target world. Unknown DC values are omitted. Chat channel selection, message colors, clickable details links, and Ctrl-click travel behavior remain unchanged. The stored notification data and IPC payloads retain their original names; this setting changes the chat text only. It does not translate arbitrary upstream service messages, debug logs, history cards, or the full notification window.
+Under **Chat**, the Japanese-labeled checkbox means "Display notification logs in Japanese." It controls `JapaneseChatAlerts`, is enabled by default, and works independently of `JapaneseRelay`. Disabling it restores English chat messages. This release omit the DC prefix in both languages. Chat channel selection, colors, clickable links, and Ctrl-click travel behavior remain unchanged. Stored notification data and IPC payloads retain their original names. The setting also selects Japanese names and defeated labels in the new S-rank history cards; it does not translate the full interface or arbitrary service messages.
 
 Development and automated verification did not overwrite installed plugins or configuration files, or send in-game chat messages.
 
 ## Building and Verification
+
+Release 1.4.1.11 uses the installed Dalamud 15.0.3.7 host DLL set. `Directory.Build.targets` adds an ECommons-only alias for Lumina's `ExcelPage` to resolve a name collision with the host's updated FFXIVClientStructs. The ECommons pin and package versions are unchanged. Release packaging succeeded with one NU1900 audit warning, 208 logic checks and 36 native ImGui card geometry cases passed. In-game tests and deployment remain pending.
 
 ECommons is pinned to submodule commit `96b6bbc9896aead9f67ea1b245b89ed510a61c88` (3.2.1.6). Upstream lock files are retained, using ECommons.IPC 1.0.0.19, SocketIOClient 3.1.1, and NAudio 2.2.1.
 
@@ -168,4 +182,4 @@ if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
 
 Output: `HuntAlerts/bin/Release/HuntAlerts/latest.zip`.
 
-The Release build and packaging succeeded with zero errors using SDK 10.0.401, MSBuild 18.9.11, and DLLs from Dalamud 15.0.3.6. One NU1900 warning remains because NuGet vulnerability information could not be retrieved; a completed vulnerability audit is not claimed. All 181 game-independent checks passed. In-game SS labels, datacenter-travel reception, Japanese sheet lookups, configuration reloads, FC/CWLS delivery, and clickable map links remain unverified. The published ZIP is the unchanged build artifact, SHA-256 `ad006c1c121b2c9bb98d5b86b53036bbfb04832ffe1658ce2558f8916b8588c2`.
+Historical verification for 1.4.1.10: the Release build and packaging succeeded with zero errors using SDK 10.0.401, MSBuild 18.9.11, and DLLs from Dalamud 15.0.3.6. One NU1900 warning remains because NuGet vulnerability information could not be retrieved; a completed vulnerability audit is not claimed. All 181 game-independent checks passed. In-game SS labels, datacenter-travel reception, Japanese sheet lookups, configuration reloads, FC/CWLS delivery, and clickable map links remain unverified. That earlier ZIP has SHA-256 `ad006c1c121b2c9bb98d5b86b53036bbfb04832ffe1658ce2558f8916b8588c2`.
