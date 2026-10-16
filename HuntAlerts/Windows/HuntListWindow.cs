@@ -10,6 +10,8 @@ using System.Numerics;
 using System.Diagnostics;
 using System.IO;
 using Dalamud.Interface.Components;
+using ECommons.DalamudServices;
+using ECommons.IPC;
 
 namespace HuntAlerts.Windows;
 
@@ -182,6 +184,7 @@ public class HuntListWindow : Window
                     Service.NotifyWindow.IsOpen = true;
                     Service.NotifyWindow.CurrentMessage = msg;
                 }
+                HandleRightClickTravel(msg);
                 var over = ImGui.IsItemHovered();
                 var creature = HuntAlerts.C.JapaneseChatAlerts ? RelayJapaneseNames.ResolveCreature(msg.creatureName) : msg.creatureName;
                 var location = $"{msg.huntWorld}{(msg.instance > 1 ? $" i{msg.instance}" : "")} / {msg.startZone}";
@@ -223,6 +226,7 @@ public class HuntListWindow : Window
                 Service.NotifyWindow.IsOpen = true;
                 Service.NotifyWindow.CurrentMessage = msg;
             }
+            HandleRightClickTravel(msg);
             var hovered = ImGui.IsItemHovered();
             if (hovered) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
 
@@ -288,6 +292,29 @@ public class HuntListWindow : Window
             ImGui.SetCursorScreenPos(new Vector2(origin.X, btmRight.Y + cardSpacing));
             ImGui.PopID();
         }
+    }
+
+    private static void HandleRightClickTravel(HuntTrainMessage entry)
+    {
+        if (!ImGui.IsItemClicked(ImGuiMouseButton.Right)) return;
+        if (!HuntAlerts.C.LifestreamIntegration || !ECommonsIPC.Lifestream.Available)
+        {
+            Svc.Chat.Print("右クリック移動にはLifestream連携を有効にしてください。");
+            return;
+        }
+        var region = Svc.Objects.LocalPlayer?.CurrentWorld.ValueNullable?.DataCenter.ValueNullable?.Region.RowId ?? 0u;
+        if (region == 0 || entry.huntRegionRowId != region || string.IsNullOrWhiteSpace(entry.huntWorld))
+        {
+            Svc.Chat.Print("移動先を確認できないか、現在地と異なるリージョンのため移動できません。");
+            return;
+        }
+        if (Utilities.TeleportInProgress || ECommonsIPC.Lifestream.IsBusy())
+        {
+            Svc.Chat.Print("Lifestreamの移動処理が進行中です。");
+            return;
+        }
+        Utilities.ExecuteTeleport(entry.huntWorld, entry.startLocation, entry.startLocationAetheryteId,
+            entry.startZone, entry.locationCoords, entry.instance, entry.openmaponArrival, true);
     }
 
     private static string FormatClockTime(HuntTrainMessage msg)

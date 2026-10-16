@@ -114,6 +114,7 @@ namespace HuntAlerts.Helpers
 
         private static CancellationTokenSource? CancellationTokenSource;
         private static int IsTaskRunning = 0; // 0 = idle, 1 = running. Use Interlocked.* only.
+        internal static bool TeleportInProgress => System.Threading.Volatile.Read(ref IsTaskRunning) != 0;
         public static async void ExecuteTeleport(string world, string startLocation, uint startLocationAetheryteId, string startZone, string locationCoords, int instance, bool openmaponArrival, bool lifestreamEnabled)
         {
             PluginLog.Information($"[Teleport] ENTER world={world} aetheryte={startLocation}(id={startLocationAetheryteId}) zone={startZone} lifestreamEnabled={lifestreamEnabled} coords={locationCoords}");
