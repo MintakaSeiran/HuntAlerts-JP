@@ -6,6 +6,10 @@ This README describes the implemented features in English. Translations of Japan
 
 ## Implemented Features
 
+### History Travel (1.4.1.15)
+
+Right-click a history card to request travel directly through Lifestream without opening the detail window. Left-click still opens details. Current Lifestream integration must be enabled and available, the player and target must be in the same known region, and neither travel handler may be busy. Repeated right-clicks do not cancel active travel. Existing destination, instance and map-on-arrival information is reused. Applies to S/SS and train cards; defeated entries remain actionable. In-game travel remains unverified. Published as a maintainer-approved prerelease.
+
 ### SS Notifications (1.4.1.14)
 
 The S-rank sound settings now include an SS spawn sound selector (inherit normal S, or game Sound 1-16) and an optional seven-color SS spawn chat log. Defaults preserve existing behavior. Confirmed SS names use the existing rank lookup. Inherit also retains the normal S custom MP3 setting. The seven-color text preserves the details link and resets its color afterward; relay and kill messages are unchanged. Snooze, cutscene muting, duty suppression and silent deferred-history processing still apply. No SS-specific MP3 import is added. In-game audio, chat colors and link interaction remain unverified.
@@ -88,7 +92,7 @@ This fork retains the upstream project's [AGPL-3.0-or-later](LICENSE) license de
 
 ## Download and Installation
 
-[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.8/HuntAlerts-JP-1.4.1.7_jp_min.8.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.8)
+[Download the compiled plugin ZIP](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/download/1.4.1.7_jp_min.9/HuntAlerts-JP-1.4.1.7_jp_min.9.zip) | [Release notes and checksum](https://github.com/MintakaSeiran/HuntAlerts-JP/releases/tag/1.4.1.7_jp_min.9)
 
 This is a prerelease: the build and automated checks pass, but in-game behavior has not been verified.
 
@@ -115,7 +119,7 @@ For manual development installation, extract the entire ZIP into a development p
 
 Updated October 15, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
 
-InformationalVersion: `1.4.1.7_jp_min.8`; assembly version: `1.4.1.14`. The published feed provides `1.4.1.14`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
+InformationalVersion: `1.4.1.7_jp_min.9`; assembly version: `1.4.1.15`. The published feed provides `1.4.1.15`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
 
 ### Relay Message Format
 
