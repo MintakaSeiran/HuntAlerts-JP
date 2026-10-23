@@ -16,6 +16,26 @@ HuntTrainMessage Entry() => new("", "srank", "ARR", "Yojimbo", "OtherWorld", "JP
 string Build(HuntTrainMessage entry, bool flag = false) =>
     JapaneseRelayText.Build(entry, flag, "ゾーナ・シーカー", "西ザナラーン", "ホライズン");
 
+var gate = new TravelRetargetGate(0);
+Check(gate.Evaluate(1000, true, false, false, false, false, false) == RetargetResult.Waiting, "Window disappearance without cancellation is insufficient");
+gate.Acknowledge();
+Check(gate.Evaluate(1000, true, false, false, false, false, false) == RetargetResult.Waiting, "Require stable idle interval");
+Check(gate.Evaluate(1499, true, false, false, false, false, false) == RetargetResult.Waiting, "Idle interval boundary");
+Check(gate.Evaluate(1500, true, false, false, false, false, false) == RetargetResult.Ready, "Acknowledged cancellation and stable idle allow restart");
+for (var blocker = 0; blocker < 4; blocker++)
+{
+    var blocked = new TravelRetargetGate(0);
+    blocked.Acknowledge();
+    blocked.Evaluate(100, true, false, false, false, false, false);
+    Check(blocked.Evaluate(700, true, false, blocker == 0, blocker == 1, blocker == 2, blocker == 3) == RetargetResult.Waiting, $"Restart blocked by condition {blocker}");
+    Check(blocked.Evaluate(800, true, false, false, false, false, false) == RetargetResult.Waiting, "Blocker resets stability interval");
+    Check(blocked.Evaluate(1300, true, false, false, false, false, false) == RetargetResult.Ready, "Stable recovery");
+}
+Check(gate.Evaluate(1600, false, false, false, false, false, false) == RetargetResult.Failed, "Changed world must not restart");
+Check(gate.Evaluate(1600, true, true, false, false, false, false) == RetargetResult.Failed, "Loading must not restart");
+Check(gate.Evaluate(15000, true, false, false, false, false, false) == RetargetResult.Failed, "Timeout must not restart");
+Check(new TravelRetargetGate(0).Evaluate(15000, true, false, true, true, true, true) == RetargetResult.Failed, "Busy timeout");
+
 var entry = Entry();
 var expected = "[S] ゾーナ・シーカー / 西ザナラーン / 最寄り: ホライズン / サーバー: Yojimbo / POS: (26.8, 16.9)";
 Check(Build(entry) == expected, "Requested format, world and POS without DC");

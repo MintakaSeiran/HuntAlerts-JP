@@ -6,9 +6,11 @@ This README describes the implemented features in English. Translations of Japan
 
 ## Implemented Features
 
-### History Travel (1.4.1.15)
+### History Travel (development 1.4.1.16; published 1.4.1.15)
 
-Right-click a history card to request travel directly through Lifestream without opening the detail window. Left-click still opens details. Current Lifestream integration must be enabled and available, the player and target must be in the same known region, and neither travel handler may be busy. Repeated right-clicks do not cancel active travel. Existing destination, instance and map-on-arrival information is reused. Applies to S/SS and train cards; defeated entries remain actionable. In-game travel remains unverified. Published as a maintainer-approved prerelease.
+Right-click a history card to request travel directly through Lifestream without opening the detail window. Left-click still opens details. Current Lifestream integration must be enabled and available, and the player and target must be in the same known region. Applies to S/SS and train cards; defeated entries remain actionable.
+
+Development 1.4.1.16 adds queued travel retargeting: while the game's World Visit reservation window is open with a positive queue position and an enabled Cancel button, right-click another card. Only a matching HuntAlerts-started request within the same datacenter can be switched. The plugin stops its old routine and Lifestream, cancels the reservation, and waits for the Japanese system cancellation message, cleared reservation state, unchanged source world, and both routines becoming idle. These conditions must remain stable for 500 ms. During confirmation the last selected card wins. Transfer-ready/loading, cross-DC travel, unsupported client languages, or a 15-second confirmation timeout do not start another trip. HUD-only queue information is insufficient; open the reservation window first. This development build is not published or installed and its game/IPC behavior remains unverified. See [implementation and manual checks](docs/TRAVEL_RETARGET_RESEARCH.md). The public 1.4.1.15 still rejects right-clicks during active travel.
 
 ### SS Notifications (1.4.1.14)
 
@@ -119,7 +121,7 @@ For manual development installation, extract the entire ZIP into a development p
 
 Updated October 15, 2026. Based on upstream commit `69ec1140add0e5ce97553785c8ad04d04ac68224` (1.4.1.7).
 
-InformationalVersion: `1.4.1.7_jp_min.9`; assembly version: `1.4.1.15`. The published feed provides `1.4.1.15`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
+Development InformationalVersion: `1.4.1.7_jp_min.10`; assembly version: `1.4.1.16`. The published feed still provides `1.4.1.15`. The build targets Dalamud API 15, .NET 10, C# 14, and x64.
 
 ### Relay Message Format
 

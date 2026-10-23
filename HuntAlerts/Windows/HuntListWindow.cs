@@ -308,13 +308,7 @@ public class HuntListWindow : Window
             Svc.Chat.Print("移動先を確認できないか、現在地と異なるリージョンのため移動できません。");
             return;
         }
-        if (Utilities.TeleportInProgress || ECommonsIPC.Lifestream.IsBusy())
-        {
-            Svc.Chat.Print("Lifestreamの移動処理が進行中です。");
-            return;
-        }
-        Utilities.ExecuteTeleport(entry.huntWorld, entry.startLocation, entry.startLocationAetheryteId,
-            entry.startZone, entry.locationCoords, entry.instance, entry.openmaponArrival, true);
+        TravelRetarget.Request(entry);
     }
 
     private static string FormatClockTime(HuntTrainMessage msg)

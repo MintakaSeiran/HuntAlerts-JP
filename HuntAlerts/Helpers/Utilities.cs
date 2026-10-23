@@ -115,16 +115,17 @@ namespace HuntAlerts.Helpers
         private static CancellationTokenSource? CancellationTokenSource;
         private static int IsTaskRunning = 0; // 0 = idle, 1 = running. Use Interlocked.* only.
         internal static bool TeleportInProgress => System.Threading.Volatile.Read(ref IsTaskRunning) != 0;
+        internal static void CancelTeleport() => CancellationTokenSource?.Cancel();
         public static async void ExecuteTeleport(string world, string startLocation, uint startLocationAetheryteId, string startZone, string locationCoords, int instance, bool openmaponArrival, bool lifestreamEnabled)
         {
             PluginLog.Information($"[Teleport] ENTER world={world} aetheryte={startLocation}(id={startLocationAetheryteId}) zone={startZone} lifestreamEnabled={lifestreamEnabled} coords={locationCoords}");
 
-            // Atomically claim the running slot. If it was already 1, this is a "click while running" — cancel and return.
+            if (TravelRetarget.IsPending) return;
+            // Keep the slot until the old routine's finally has completed.
             if (Interlocked.Exchange(ref IsTaskRunning, 1) == 1)
             {
                 PluginLog.Information("[Teleport] click-while-running detected; cancelling in-flight teleport.");
                 CancellationTokenSource?.Cancel();
-                Interlocked.Exchange(ref IsTaskRunning, 0);
                 return;
             }
 
@@ -134,6 +135,11 @@ namespace HuntAlerts.Helpers
                 {
                     PluginLog.Warning($"[Teleport] aborting: lifestreamEnabled={lifestreamEnabled} lifestreamAvailable={ECommonsIPC.Lifestream.Available}");
                     Svc.Chat.Print("Lifestream is required for teleport but is not enabled or installed.");
+                    return;
+                }
+                if (ECommonsIPC.Lifestream.IsBusy() || Svc.Condition[ConditionFlag.WaitingToVisitOtherWorld])
+                {
+                    Svc.Chat.Print("既存の移動処理が進行中です。終了してから再実行してください。");
                     return;
                 }
 
@@ -167,6 +173,7 @@ namespace HuntAlerts.Helpers
                         Svc.Chat.Print($"Lifestream rejected the world change to {world} (busy or unreachable).");
                         return;
                     }
+                    TravelRetarget.Track(currentworldName, world);
                 }
 
                 if (startLocationAetheryteId == 0)
@@ -215,8 +222,11 @@ namespace HuntAlerts.Helpers
                                     }
                                     var stillBusy = ECommonsIPC.Lifestream.IsBusy();
                                     PluginLog.Information($"[Teleport] calling Lifestream.Teleport({startLocationAetheryteId}, 0). IsBusy at call time = {stillBusy}");
-                                    var teleportResult = await Svc.Framework.RunOnFrameworkThread(
-                                        () => ECommonsIPC.Lifestream.Teleport(startLocationAetheryteId, 0));
+                                    var teleportResult = await Svc.Framework.RunOnFrameworkThread(() =>
+                                    {
+                                        token.ThrowIfCancellationRequested();
+                                        return ECommonsIPC.Lifestream.Teleport(startLocationAetheryteId, 0);
+                                    });
                                     PluginLog.Information($"[Teleport] Lifestream.Teleport returned {teleportResult}.");
                                     if (!teleportResult)
                                     {
@@ -242,7 +252,7 @@ namespace HuntAlerts.Helpers
                                                 PluginLog.Verbose("Opening map and flagging coordinates");
                                                 _ = Svc.Framework.RunOnFrameworkThread(() =>
                                                 {
-                                                    FlagOnMap(locationCoords, startZone);
+                                                    if (!token.IsCancellationRequested) FlagOnMap(locationCoords, startZone);
                                                 });
                                                 return;
                                             }
@@ -263,7 +273,7 @@ namespace HuntAlerts.Helpers
                     await Task.Delay(500, token);
                 }
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 // Cancellation is expected when the user clicks the button again to abort.
             }
@@ -273,6 +283,7 @@ namespace HuntAlerts.Helpers
             }
             finally
             {
+                TravelRetarget.EndTravel();
                 Interlocked.Exchange(ref IsTaskRunning, 0);
             }
         }

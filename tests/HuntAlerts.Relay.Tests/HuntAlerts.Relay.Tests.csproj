@@ -7,6 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../HuntAlerts/Helpers/TravelRetargetGate.cs" Link="TravelRetargetGate.cs" />
     <Compile Include="../../HuntAlerts/Helpers/HuntTrainMessage.cs" Link="HuntTrainMessage.cs" />
     <Compile Include="../../HuntAlerts/Helpers/JapaneseRelayText.cs" Link="JapaneseRelayText.cs" />
     <Compile Include="../../HuntAlerts/Helpers/ChatAlertText.cs" Link="ChatAlertText.cs" />

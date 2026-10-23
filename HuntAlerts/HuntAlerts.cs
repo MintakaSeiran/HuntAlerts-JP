@@ -55,6 +55,7 @@ namespace HuntAlerts
 
             SingletonServiceManager.Initialize(typeof(Service));
             ChatWaypointListener.Enable();
+            Helpers.TravelRetarget.Enable();
 
             if (C.LastSeenChangelogVersion < Changelog.Revision)
             {
@@ -74,6 +75,7 @@ namespace HuntAlerts
         public void Dispose()
         {
             ChatWaypointListener.Disable();
+            Helpers.TravelRetarget.Disable();
             Helpers.Sounds.DisposeAll();
             WindowSystem.RemoveAllWindows();
             Service.ConfigWindow.Dispose();
